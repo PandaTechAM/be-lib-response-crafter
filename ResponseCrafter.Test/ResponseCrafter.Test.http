@@ -1,0 +1,19 @@
+###
+@url = http://localhost:5074
+
+###
+GET {{url}}/bad-request
+Accept: application/json
+###
+GET {{url}}/server-error
+Accept: application/json
+###
+###
+GET {{url}}/unauthorized
+Accept: application/json
+###
+
+###
+GET {{url}}/conflict
+Accept: application/json
+####
