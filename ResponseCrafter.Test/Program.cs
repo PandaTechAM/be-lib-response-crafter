@@ -6,13 +6,13 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-builder.Services.AddExceptionHandler<PandaExceptionHandler>();
+builder.AddResponseCrafter();
 var app = builder.Build();
 app.UseSwagger();
 
 app.UseHttpsRedirection();
 
-app.UseExceptionHandler(_ => { });
+app.UseResponseCrafter();
 
 var errors = new Dictionary<string, string>
 {

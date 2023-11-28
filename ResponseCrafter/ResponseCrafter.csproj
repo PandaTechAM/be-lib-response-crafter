@@ -10,9 +10,9 @@
         <Title>ResponseCrafter</Title>
         <Description>Handling exceptions, custom Dtos.</Description>
         <RepositoryUrl>https://github.com/PandaTechAM/be-lib-response-crafter</RepositoryUrl>
-        <PackageReleaseNotes>Origination of the NuGet</PackageReleaseNotes>
         <PackageIcon>pandatech.png</PackageIcon>
         <PackageReadmeFile>Readme.md</PackageReadmeFile>
+        <PackageReleaseNotes>Added extension methods</PackageReleaseNotes>
     </PropertyGroup>
 
     <ItemGroup>
