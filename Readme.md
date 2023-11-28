@@ -12,30 +12,24 @@ crafting detailed error responses suitable for both development and production e
   exceptions.
 * **Detailed Error Responses:** Generates verbose error messages, including stack traces for in-depth debugging in
   development environments.
-* **Environment-Sensitive Logging:** Offers two classes (`ResponseCrafterPublic` and `ResponseCrafterPrivate`) to tailor
-  the
-  amount of information exposed based on the environment.
+* **Environment-Sensitive Logging:** Offers a class `PandaExceptionHandler` which can be configured for message verbosity.
+  In production environments, only the exception type and message are logged. In development environments, the entire
+  exception is logged, including the stack trace.
 * **Frontend-Friendly Error Messages:** Encourages the use of snake_case in error messages, facilitating easier
   integration with frontend localization systems.
 * **Organized/Readable and standardized error responses:** Provides a standardized error response format for all
   exceptions, making it easier for frontend applications to parse and display error messages. The error response format is shown below:
 ```json
 {
+  "TraceId": "0HMVFE0A284AM:00000001",
+  "Instance": "POST - 164.54.144.23:443/users/register",
   "StatusCode": 400,
   "Type": "BadRequestException",
-  "Message": "the_request_was_invalid_or_cannot_be_otherwise_served.",
-  "Errors": [
-    {
-      "Field": "email",
-      "Message": "email_address_is_not_in_a_valid_format."
-    },
-    {
-      "Field": "password",
-      "Message": "password_must_be_at_least_8_characters_long."
-    }
-  ],
-  "TraceId": "0HMVFE0A284AM:00000001",
-  "Instance": "POST - 164.54.144.23:443/users/register"
+  "Errors": {
+    "email": "email_address_is_not_in_a_valid_format",
+    "password": "password_must_be_at_least_8_characters_long"
+  },
+  "Message": "the_request_was_invalid_or_cannot_be_otherwise_served."
 }
 
 ````
@@ -52,13 +46,16 @@ Install-Package ResponseCrafter
 
 ### 1. Setup Exception Handlers:
 
-**Add** `ResponseCrafterPublic` for production environments to expose limited error details.
-**Use** `ResponseCrafterPrivate` for development environments to get detailed error information.
+**Add** `AddResponseCrafter` in program.cs and in configuration set `"ResponseCrafterVisibility"` to `"Public"` or `"Private"`.
 
 ```csharp
-builder.Services.AddExceptionHandler<ResponseCrafterPublic>(); // For Production
-// or
-builder.Services.AddExceptionHandler<ResponseCrafterPrivate>(); // For Development
+builder.AddResponseCrafter();
+```
+```json
+{
+  "ResponseCrafterVisibility": "Public"
+}
+
 ```
 
 ### 2. Define Custom Exceptions:
@@ -72,7 +69,7 @@ builder.Services.AddExceptionHandler<ResponseCrafterPrivate>(); // For Developme
 * Implement the exception handling middleware in your application's pipeline.
 
 ```csharp
-app.UseExceptionHandlerMiddleware(_ => { }); //the lambda parameter is not needed it is just .net 8 bug which might be fixed in the future
+app.UseResponseCrafter();
 ```
 
 ### 4. Logging and Error Responses:

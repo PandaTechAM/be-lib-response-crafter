@@ -46,10 +46,10 @@ Install-Package ResponseCrafter
 
 ### 1. Setup Exception Handlers:
 
-**Add** `PandaExceptionHandler` in program.cs and in configuration set `"ResponseCrafterVisibility"` to `"Public"` or `"Private"`.
+**Add** `AddResponseCrafter` in program.cs and in configuration set `"ResponseCrafterVisibility"` to `"Public"` or `"Private"`.
 
 ```csharp
-builder.Services.AddExceptionHandler<PandaExceptionHandler>();
+builder.AddResponseCrafter();
 ```
 ```json
 {
@@ -69,7 +69,7 @@ builder.Services.AddExceptionHandler<PandaExceptionHandler>();
 * Implement the exception handling middleware in your application's pipeline.
 
 ```csharp
-app.UseExceptionHandlerMiddleware(_ => { }); //the lambda parameter is not needed it is just .net 8 bug which might be fixed in the future
+app.UseResponseCrafter();
 ```
 
 ### 4. Logging and Error Responses:
