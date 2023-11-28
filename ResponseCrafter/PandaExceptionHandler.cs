@@ -3,17 +3,26 @@ using Microsoft.Extensions.Logging;
 using ResponseCrafter.Dtos;
 using System.Net;
 using Microsoft.AspNetCore.Diagnostics;
+using Microsoft.Extensions.Configuration;
 using static ResponseCrafter.ExceptionMessageBuilder;
 
 namespace ResponseCrafter;
 
-public class ResponseCrafterPrivate : IExceptionHandler
+public class PandaExceptionHandler : IExceptionHandler
 {
-    private readonly ILogger<ResponseCrafterPrivate> _logger;
+    private readonly ILogger<PandaExceptionHandler> _logger;
+    private readonly string _visibility;
 
-    public ResponseCrafterPrivate(ILogger<ResponseCrafterPrivate> logger)
+    public PandaExceptionHandler(ILogger<PandaExceptionHandler> logger, IConfiguration configuration)
     {
         _logger = logger;
+        _visibility = configuration["ResponseCrafterVisibility"]!;
+
+        if (string.IsNullOrEmpty(_visibility) || _visibility != "Private" && _visibility != "Public")
+        {
+            _visibility = "Public";
+            _logger.LogWarning("Visibility configuration was not available. Defaulting to `Public`.");
+        }
     }
 
     public async ValueTask<bool> TryHandleAsync(HttpContext httpContext, Exception exception,
@@ -34,21 +43,20 @@ public class ResponseCrafterPrivate : IExceptionHandler
     private async Task HandleApiExceptionAsync(HttpContext httpContext, ApiException exception,
         CancellationToken cancellationToken)
     {
-        
         var response = new ErrorResponse
         {
+            TraceId = httpContext.TraceIdentifier,
+            Instance = CreateRequestPath(httpContext),
             StatusCode = exception.StatusCode,
             Type = exception.GetType().Name,
-            Message = exception.Message,
             Errors = exception.Errors,
-            Instance = CreateRequestPath(httpContext),
-            TraceId = httpContext.TraceIdentifier
+            Message = exception.Message
         };
 
         httpContext.Response.StatusCode = exception.StatusCode;
         await httpContext.Response.WriteAsJsonAsync(response, cancellationToken: cancellationToken);
 
-        _logger.LogWarning("API Exception: {Message}", response);
+        _logger.LogWarning("API Exception: {Response}", response);
     }
 
     private async Task HandleGeneralExceptionAsync(HttpContext httpContext, Exception exception,
@@ -58,15 +66,25 @@ public class ResponseCrafterPrivate : IExceptionHandler
 
         var response = new ErrorResponse
         {
-            StatusCode = (int)HttpStatusCode.InternalServerError,
-            Type = exception.GetType().Name,
-            Message = verboseMessage,
+            TraceId = httpContext.TraceIdentifier,
             Instance = CreateRequestPath(httpContext),
-            TraceId = httpContext.TraceIdentifier
+            StatusCode = 500,
+            Type = "InternalServerError",
+            Message = "something_went_wrong_please_try_again_later_and_or_contact_it_support"
         };
 
-        httpContext.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
+        if (_visibility == "Private")
+        {
+            response.Type = exception.GetType().Name;
+            response.Message = verboseMessage;
+        }
+
+        httpContext.Response.StatusCode = response.StatusCode;
         await httpContext.Response.WriteAsJsonAsync(response, cancellationToken: cancellationToken);
-        _logger.LogError("API Exception: {Message}", response);
+
+        if (_visibility == "Public")
+            _logger.LogError("API Exception: {Response}. Actual hidden message: {Message}", response, verboseMessage);
+        else
+            _logger.LogError("API Exception: {Response}", response);
     }
 }

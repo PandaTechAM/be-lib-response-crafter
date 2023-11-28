@@ -3,8 +3,8 @@
 namespace ResponseCrafter;
 
 public abstract class ApiException(int statusCode, string message,
-    List<ErrorDetail>? errors = null): Exception(message)
+    Dictionary<string, string>? errors = null): Exception(message)
 {
     public int StatusCode { get; private set; } = statusCode;
-    public List<ErrorDetail>? Errors { get; private set; } = errors;
+    public Dictionary<string, string>? Errors { get; private set; } = errors;
 }

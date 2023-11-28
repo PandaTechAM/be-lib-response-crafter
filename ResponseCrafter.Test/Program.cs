@@ -6,7 +6,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-builder.Services.AddExceptionHandler<ResponseCrafterPublic>();
+builder.Services.AddExceptionHandler<PandaExceptionHandler>();
 var app = builder.Build();
 app.UseSwagger();
 
@@ -14,10 +14,10 @@ app.UseHttpsRedirection();
 
 app.UseExceptionHandler(_ => { });
 
-var errors = new List<ErrorDetail>
+var errors = new Dictionary<string, string>
 {
-    new("Error1", "Error2"),
-    new("Error3", "Error4")
+    {"some_error", "some_error_message"},
+    {"some_other_error", "some_other_error_message"}
 };
 
 app.MapGet("/server-error", (Exception) => throw new Exception("some_unhandled_exception"));
