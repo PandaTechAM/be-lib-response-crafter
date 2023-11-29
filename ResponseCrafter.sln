@@ -1,8 +1,8 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ResponseCrafter", "ResponseCrafter\ResponseCrafter.csproj", "{25001943-A870-4E17-A9B9-0D190CEC819B}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ResponseCrafter", "src\ResponseCrafter\ResponseCrafter.csproj", "{25001943-A870-4E17-A9B9-0D190CEC819B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ResponseCrafter.Test", "../tests/ResponseCrafter.Test\ResponseCrafter.Test.csproj", "{112D91D7-F578-4303-9E05-2DFF4E03BB1B}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ResponseCrafter.Test", "src\ResponseCrafter.Test\ResponseCrafter.Test.csproj", "{112D91D7-F578-4303-9E05-2DFF4E03BB1B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
