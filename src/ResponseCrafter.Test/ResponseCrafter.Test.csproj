@@ -13,7 +13,8 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\..\src\ResponseCrafter\ResponseCrafter.csproj" />
+      <ProjectReference Include="..\ResponseCrafter\ResponseCrafter.csproj" />
     </ItemGroup>
+
 
 </Project>
