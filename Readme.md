@@ -13,8 +13,8 @@ crafting detailed error responses suitable for both development and production e
 * **Detailed Error Responses:** Generates verbose error messages, including stack traces for in-depth debugging in
   development environments.
 * **Environment-Sensitive Logging:** Offers a class `PandaExceptionHandler` which can be configured for message verbosity.
-  In production environments, only the exception type and message are logged. In development environments, the entire
-  exception is logged, including the stack trace.
+    In production environments, only the exception type and message are logged. In development environments, the entire
+    exception is logged, including the stack trace.
 * **Frontend-Friendly Error Messages:** Encourages the use of snake_case in error messages, facilitating easier
   integration with frontend localization systems.
 * **Organized/Readable and standardized error responses:** Provides a standardized error response format for all

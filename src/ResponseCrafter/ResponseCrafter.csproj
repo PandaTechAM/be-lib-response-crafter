@@ -5,29 +5,25 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <Authors>Pandatech</Authors>
+        <Copyright>MIT</Copyright>
+        <PackageIcon>pandatech.png</PackageIcon>
+        <PackageReadmeFile>Readme.md</PackageReadmeFile>
+        <Version>1.0.2</Version>
         <PackageId>Pandatech.ResponseCrafter</PackageId>
-        <Version>1.0.1</Version>
+        <PackageTags>Pandatech, library, exception handler, exception, middleware, Api response</PackageTags>
         <Title>ResponseCrafter</Title>
         <Description>Handling exceptions, custom Dtos.</Description>
         <RepositoryUrl>https://github.com/PandaTechAM/be-lib-response-crafter</RepositoryUrl>
-        <PackageIcon>pandatech.png</PackageIcon>
-        <PackageReadmeFile>Readme.md</PackageReadmeFile>
-        <PackageReleaseNotes>Added extension methods</PackageReleaseNotes>
+        <PackageReleaseNotes>Structure change</PackageReleaseNotes>
     </PropertyGroup>
 
     <ItemGroup>
-        <None Update="pandatech.png">
-            <Pack>True</Pack>
-            <PackagePath></PackagePath>
-        </None>
-        <None Update="Readme.md">
-            <Pack>True</Pack>
-            <PackagePath>\</PackagePath>
-        </None>
+        <None Include="..\..\pandatech.png" Pack="true" PackagePath="\"/>
+        <None Include="..\..\Readme.md" Pack="true" PackagePath="\"/>
     </ItemGroup>
 
     <ItemGroup>
-      <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="8.0.0" />
+        <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="8.0.0"/>
     </ItemGroup>
 
 </Project>
