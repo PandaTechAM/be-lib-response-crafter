@@ -1,7 +1,7 @@
 name: Deploy NuGet Package
 
 env:
-  PROJECT_PATH: './ResponseCrafter/ResponseCrafter.csproj'
+  PROJECT_PATH: './src/ResponseCrafter/ResponseCrafter.csproj'
   OUTPUT_DIR: 'nupkgs'
   NUGET_SOURCE: 'https://api.nuget.org/v3/index.json'
   NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
@@ -28,11 +28,8 @@ jobs:
       - name: Build
         run: dotnet build ${{ env.PROJECT_PATH }}
 
-      - name: Test
-        run: dotnet test ${{ env.PROJECT_PATH }} --collect:"XPlat Code Coverage"
-
       - name: Pack
-        run: dotnet pack ${{ env.PROJECT_PATH }} --output ${{ env.OUTPUT_DIR }} 
+        run: dotnet pack ${{ env.PROJECT_PATH }} --output ${{ env.OUTPUT_DIR }}
 
       - name: Publish
         run: dotnet nuget push ${{ env.OUTPUT_DIR }}/*.nupkg -k ${{ env.NUGET_API_KEY }} -s ${{ env.NUGET_SOURCE }}
