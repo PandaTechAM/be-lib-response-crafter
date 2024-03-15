@@ -18,4 +18,11 @@ public class Controller : ControllerBase
     {
         return BadRequest("some_exception");
     }
+    
+    [HttpPost("/load-controller")]
+    public async Task<IActionResult> Load(TestDto dto)
+    {
+        await Task.Delay(77);
+        return Ok(dto);
+    }
 }

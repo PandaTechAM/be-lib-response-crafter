@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using PandaTech.IEnumerableFilters.Exceptions;
 using ResponseCrafter;
 using ResponseCrafter.StandardHttpExceptions;
 using ResponseCrafter.Test;
@@ -27,19 +28,25 @@ app.MapGet("/error-by-exception-minimal", _ => throw new BadRequestException("so
 app.MapGet("/error-by-result-minimal", () => Results.BadRequest("some_exception"));
 
 
-
 app.MapGet("/token", (HttpContext httpContext) =>
 {
     httpContext.SetToken("some_token");
     throw new Exception();
-        // return httpContext.GetToken();
+    // return httpContext.GetToken();
 });
 
 
 app.MapGet("/server-error", (Exception) => throw new Exception("some_unhandled_exception"));
 app.MapGet("/bad-request", (ApiException) => throw new BadRequestException(errors));
 app.MapGet("/unauthorized", (ApiException) => throw new UnauthorizedException());
-app.MapGet("/conflict", (ApiException) => throw new ConflictException("some_exception"));
+app.MapGet("/filter", (apiException) => throw new ComparisonNotSupportedException("some_exception")).WithTags("something");
+
+app.MapPost("/load-minimal", async (TestDto dto) =>
+{
+    throw new MappingException("d");
+    await Task.Delay(77);
+    return Results.Ok(dto);
+});
 
 app.MapControllers();
 
