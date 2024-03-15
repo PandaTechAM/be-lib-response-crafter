@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using PandaTech.IEnumerableFilters.Exceptions;
 using ResponseCrafter;
 using ResponseCrafter.StandardHttpExceptions;
-using ResponseCrafter.Test;
+using ResponseCrafter.Demo;
 
 var builder = WebApplication.CreateBuilder(args);
 

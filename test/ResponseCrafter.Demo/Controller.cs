@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using ResponseCrafter.StandardHttpExceptions;
 
-namespace ResponseCrafter.Test;
+namespace ResponseCrafter.Demo;
 
 [ApiController]
 [Route("")]

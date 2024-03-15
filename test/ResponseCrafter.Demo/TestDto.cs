@@ -1,4 +1,4 @@
-﻿namespace ResponseCrafter.Test;
+﻿namespace ResponseCrafter.Demo;
 
 public class TestDto
 {
