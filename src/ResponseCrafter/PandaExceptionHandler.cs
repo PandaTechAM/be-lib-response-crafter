@@ -1,9 +1,10 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using ResponseCrafter.Dtos;
-using System.Net;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.Extensions.Configuration;
+using PandaTech.IEnumerableFilters.Exceptions;
+using ResponseCrafter.StandardHttpExceptions;
 using static ResponseCrafter.ExceptionMessageBuilder;
 
 namespace ResponseCrafter;
@@ -28,13 +29,17 @@ public class PandaExceptionHandler : IExceptionHandler
     public async ValueTask<bool> TryHandleAsync(HttpContext httpContext, Exception exception,
         CancellationToken cancellationToken)
     {
-        if (exception is ApiException apiException)
+        switch (exception)
         {
-            await HandleApiExceptionAsync(httpContext, apiException, cancellationToken);
-        }
-        else
-        {
-            await HandleGeneralExceptionAsync(httpContext, exception, cancellationToken);
+            case ApiException apiException:
+                await HandleApiExceptionAsync(httpContext, apiException, cancellationToken);
+                break;
+            case FilterException filterException:
+                await HandleFilterExceptionAsync(httpContext, filterException, cancellationToken);
+                break;
+            default:
+                await HandleGeneralExceptionAsync(httpContext, exception, cancellationToken);
+                break;
         }
 
         return true;
@@ -57,6 +62,27 @@ public class PandaExceptionHandler : IExceptionHandler
         await httpContext.Response.WriteAsJsonAsync(response, cancellationToken: cancellationToken);
 
         _logger.LogWarning("API Exception: {Response}", response);
+    }
+
+    private async Task HandleFilterExceptionAsync(HttpContext httpContext, FilterException filterException,
+        CancellationToken cancellationToken)
+    {
+        switch (filterException)
+        {
+            case ComparisonNotSupportedException _:
+            case MappingException _:
+            case NoOrderingFoundException _:
+            case PropertyNotFoundException _:
+            case UnsupportedFilterException _:
+                var exceptionName = filterException.GetType().Name;
+                var formattedMessage = $"{exceptionName} in Filters: {filterException.Message}";
+                var mappedException = new BadRequestException(formattedMessage);
+                await HandleApiExceptionAsync(httpContext, mappedException, cancellationToken);
+                break;
+            default:
+                await HandleGeneralExceptionAsync(httpContext, filterException, cancellationToken);
+                break;
+        }
     }
 
     private async Task HandleGeneralExceptionAsync(HttpContext httpContext, Exception exception,
