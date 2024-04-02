@@ -2,6 +2,7 @@
 using Microsoft.Extensions.Logging;
 using ResponseCrafter.Dtos;
 using Microsoft.AspNetCore.Diagnostics;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using PandaTech.IEnumerableFilters.Exceptions;
 using ResponseCrafter.StandardHttpExceptions;
@@ -34,6 +35,9 @@ public class PandaExceptionHandler : IExceptionHandler
             case ApiException apiException:
                 await HandleApiExceptionAsync(httpContext, apiException, cancellationToken);
                 break;
+            case DbUpdateConcurrencyException:
+                await HandleDbConcurrencyExceptionAsync(httpContext, cancellationToken);
+                break;
             case FilterException filterException:
                 await HandleFilterExceptionAsync(httpContext, filterException, cancellationToken);
                 break;
@@ -44,6 +48,8 @@ public class PandaExceptionHandler : IExceptionHandler
 
         return true;
     }
+
+    
 
     private async Task HandleApiExceptionAsync(HttpContext httpContext, ApiException exception,
         CancellationToken cancellationToken)
@@ -62,6 +68,12 @@ public class PandaExceptionHandler : IExceptionHandler
         await httpContext.Response.WriteAsJsonAsync(response, cancellationToken: cancellationToken);
 
         _logger.LogWarning("API Exception: {Response}", response);
+    }
+    
+    private async Task HandleDbConcurrencyExceptionAsync(HttpContext httpContext, CancellationToken cancellationToken)
+    {
+        var exception = new ConflictException("a_concurrency_conflict_occurred._please_reload_the_resource_and_try_you_update_again");
+        await HandleApiExceptionAsync(httpContext, exception, cancellationToken);
     }
 
     private async Task HandleFilterExceptionAsync(HttpContext httpContext, FilterException filterException,
