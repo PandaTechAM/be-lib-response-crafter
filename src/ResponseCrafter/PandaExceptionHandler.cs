@@ -1,10 +1,10 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using EFCoreQueryMagic.Exceptions;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using ResponseCrafter.Dtos;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
-using PandaTech.IEnumerableFilters.Exceptions;
 using ResponseCrafter.StandardHttpExceptions;
 using static ResponseCrafter.ExceptionMessageBuilder;
 

@@ -1,6 +1,4 @@
-﻿using ResponseCrafter.Dtos;
-
-namespace ResponseCrafter.StandardHttpExceptions;
+﻿namespace ResponseCrafter.StandardHttpExceptions;
 
 public class BadRequestException : ApiException
 {
