@@ -1,6 +1,4 @@
-﻿using ResponseCrafter.Dtos;
-
-namespace ResponseCrafter;
+﻿namespace ResponseCrafter;
 
 public abstract class ApiException(int statusCode, string message,
     Dictionary<string, string>? errors = null): Exception(message)

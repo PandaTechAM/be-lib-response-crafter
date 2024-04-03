@@ -1,5 +1,4 @@
-using Microsoft.AspNetCore.Mvc;
-using PandaTech.IEnumerableFilters.Exceptions;
+using EFCoreQueryMagic.Exceptions;
 using ResponseCrafter;
 using ResponseCrafter.StandardHttpExceptions;
 using ResponseCrafter.Demo;
@@ -39,7 +38,8 @@ app.MapGet("/token", (HttpContext httpContext) =>
 app.MapGet("/server-error", (Exception) => throw new Exception("some_unhandled_exception"));
 app.MapGet("/bad-request", (ApiException) => throw new BadRequestException(errors));
 app.MapGet("/unauthorized", (ApiException) => throw new UnauthorizedException());
-app.MapGet("/filter", (apiException) => throw new ComparisonNotSupportedException("some_exception")).WithTags("something");
+app.MapGet("/filter", (apiException) => throw new ComparisonNotSupportedException("some_exception"))
+    .WithTags("something");
 
 app.MapPost("/load-minimal", async (TestDto dto) =>
 {
