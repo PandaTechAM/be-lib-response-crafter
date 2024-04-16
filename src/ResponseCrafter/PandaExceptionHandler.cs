@@ -2,11 +2,12 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using ResponseCrafter.Dtos;
-using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
+using PandaTech.ServiceResponse;
 using ResponseCrafter.StandardHttpExceptions;
 using static ResponseCrafter.ExceptionMessageBuilder;
+using IExceptionHandler = Microsoft.AspNetCore.Diagnostics.IExceptionHandler;
 
 namespace ResponseCrafter;
 
@@ -41,6 +42,9 @@ public class PandaExceptionHandler : IExceptionHandler
             case FilterException filterException:
                 await HandleFilterExceptionAsync(httpContext, filterException, cancellationToken);
                 break;
+            case ServiceException serviceException:
+                await HandleServiceExceptionAsync(httpContext, serviceException, cancellationToken);
+                break;
             default:
                 await HandleGeneralExceptionAsync(httpContext, exception, cancellationToken);
                 break;
@@ -49,7 +53,33 @@ public class PandaExceptionHandler : IExceptionHandler
         return true;
     }
 
-    
+    private async Task HandleServiceExceptionAsync(HttpContext httpContext, ServiceException serviceException, CancellationToken cancellationToken)
+    {
+        var response = new ServiceResponse
+        {
+            Message = "a_concurrency_conflict_occurred._please_reload_the_resource_and_try_you_update_again",
+            ResponseStatus = serviceException.ResponseStatus,
+            Success = false
+        };
+        
+        if (_visibility == "Private")
+        {
+            response.Message = serviceException.Message;
+        }
+
+        httpContext.Response.StatusCode = (int)serviceException.ResponseStatus;
+        
+        if (httpContext.Response.StatusCode >= 500)
+        {
+            _logger.LogError("API exception: {Response}", serviceException.Message);
+        }
+        else
+        {
+            _logger.LogWarning("API exception: {Response}", serviceException.Message);
+        }
+
+        await httpContext.Response.WriteAsJsonAsync(response, cancellationToken);
+    }
 
     private async Task HandleApiExceptionAsync(HttpContext httpContext, ApiException exception,
         CancellationToken cancellationToken)
