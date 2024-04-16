@@ -8,13 +8,13 @@
         <Copyright>MIT</Copyright>
         <PackageIcon>pandatech.png</PackageIcon>
         <PackageReadmeFile>Readme.md</PackageReadmeFile>
-        <Version>1.2.1</Version>
+        <Version>1.3.0</Version>
         <PackageId>Pandatech.ResponseCrafter</PackageId>
         <PackageTags>Pandatech, library, exception handler, exception, middleware, Api response</PackageTags>
         <Title>ResponseCrafter</Title>
         <Description>Handling exceptions, custom Dtos.</Description>
         <RepositoryUrl>https://github.com/PandaTechAM/be-lib-response-crafter</RepositoryUrl>
-        <PackageReleaseNotes>Updated nugets</PackageReleaseNotes>
+        <PackageReleaseNotes>Added Pandatech.ServiceResponse support as well.</PackageReleaseNotes>
     </PropertyGroup>
 
     <ItemGroup>
@@ -25,6 +25,7 @@
     <ItemGroup>
         <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="8.0.3" />
         <PackageReference Include="Pandatech.EFCoreQueryMagic" Version="1.0.0" />
+        <PackageReference Include="PandaTech.ServiceResponse" Version="1.2.12" />
     </ItemGroup>
 
 </Project>
