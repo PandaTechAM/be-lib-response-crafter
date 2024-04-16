@@ -98,8 +98,15 @@ public class PandaExceptionHandler : IExceptionHandler
         httpContext.Response.StatusCode = exception.StatusCode;
         await httpContext.Response.WriteAsJsonAsync(response, cancellationToken: cancellationToken);
 
-        _logger.LogWarning("ApiException encountered: {TraceId}, {Instance}, {Message}", response.TraceId,
-            response.Instance, response.Message);
+        if (response.Errors is null || response.Errors.Count == 0)
+        {
+            _logger.LogWarning("ApiException encountered: {Message}", response.Message);
+        }
+        else
+        {
+            _logger.LogWarning("ApiException encountered: {Message} with errors: {@Errors}", response.Message,
+                response.Errors);
+        }
     }
 
     private async Task HandleDbConcurrencyExceptionAsync(HttpContext httpContext, CancellationToken cancellationToken)
@@ -155,7 +162,6 @@ public class PandaExceptionHandler : IExceptionHandler
         await httpContext.Response.WriteAsJsonAsync(response, cancellationToken: cancellationToken);
 
 
-        _logger.LogError("Unhandled exception encountered: {TraceId}, {Instance}, {Message}", response.TraceId,
-            response.Instance, verboseMessage);
+        _logger.LogError("Unhandled exception encountered: {Message}", verboseMessage);
     }
 }

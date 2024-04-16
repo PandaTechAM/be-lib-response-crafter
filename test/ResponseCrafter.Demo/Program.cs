@@ -36,7 +36,10 @@ app.MapGet("/token", (HttpContext httpContext) =>
 
 
 app.MapGet("/server-error", (Exception) => throw new Exception("some_unhandled_exception"));
-app.MapGet("/bad-request", (ApiException) => throw new BadRequestException(errors));
+app.MapGet("/bad-request", () =>
+{
+    throw new BadRequestException(errors);
+});
 app.MapGet("/unauthorized", (ApiException) => throw new UnauthorizedException());
 app.MapGet("/filter", (apiException) => throw new ComparisonNotSupportedException("some_exception"))
     .WithTags("something");
