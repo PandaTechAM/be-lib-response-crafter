@@ -24,7 +24,7 @@ public class PandaExceptionHandler : IExceptionHandler
         if (string.IsNullOrEmpty(_visibility) || _visibility != "Private" && _visibility != "Public")
         {
             _visibility = "Public";
-            _logger.LogWarning("Visibility configuration was not available. Defaulting to `Public`.");
+            _logger.LogWarning("Visibility configuration was not available. Defaulted to 'Public'.");
         }
     }
 
@@ -53,7 +53,8 @@ public class PandaExceptionHandler : IExceptionHandler
         return true;
     }
 
-    private async Task HandleServiceExceptionAsync(HttpContext httpContext, ServiceException serviceException, CancellationToken cancellationToken)
+    private async Task HandleServiceExceptionAsync(HttpContext httpContext, ServiceException serviceException,
+        CancellationToken cancellationToken)
     {
         var response = new ServiceResponse
         {
@@ -61,21 +62,21 @@ public class PandaExceptionHandler : IExceptionHandler
             ResponseStatus = serviceException.ResponseStatus,
             Success = false
         };
-        
+
         if (_visibility == "Private")
         {
             response.Message = serviceException.Message;
         }
 
         httpContext.Response.StatusCode = (int)serviceException.ResponseStatus;
-        
+
         if (httpContext.Response.StatusCode >= 500)
         {
-            _logger.LogError("API exception: {Response}", serviceException.Message);
+            _logger.LogError("ServiceException encountered: {ExceptionMessage}", serviceException.Message);
         }
         else
         {
-            _logger.LogWarning("API exception: {Response}", serviceException.Message);
+            _logger.LogWarning("ServiceException encountered: {ExceptionMessage}", serviceException.Message);
         }
 
         await httpContext.Response.WriteAsJsonAsync(response, cancellationToken);
@@ -97,12 +98,15 @@ public class PandaExceptionHandler : IExceptionHandler
         httpContext.Response.StatusCode = exception.StatusCode;
         await httpContext.Response.WriteAsJsonAsync(response, cancellationToken: cancellationToken);
 
-        _logger.LogWarning("API Exception: {Response}", response);
+        _logger.LogWarning("ApiException encountered: {TraceId}, {Instance}, {Message}", response.TraceId,
+            response.Instance, response.Message);
     }
-    
+
     private async Task HandleDbConcurrencyExceptionAsync(HttpContext httpContext, CancellationToken cancellationToken)
     {
-        var exception = new ConflictException("a_concurrency_conflict_occurred._please_reload_the_resource_and_try_you_update_again");
+        var exception =
+            new ConflictException(
+                "a_concurrency_conflict_occurred._please_reload_the_resource_and_try_you_update_again");
         await HandleApiExceptionAsync(httpContext, exception, cancellationToken);
     }
 
@@ -150,9 +154,8 @@ public class PandaExceptionHandler : IExceptionHandler
         httpContext.Response.StatusCode = response.StatusCode;
         await httpContext.Response.WriteAsJsonAsync(response, cancellationToken: cancellationToken);
 
-        if (_visibility == "Public")
-            _logger.LogError("API Exception: {Response}. Actual hidden message: {Message}", response, verboseMessage);
-        else
-            _logger.LogError("API Exception: {Response}", response);
+
+        _logger.LogError("Unhandled exception encountered: {TraceId}, {Instance}, {Message}", response.TraceId,
+            response.Instance, verboseMessage);
     }
 }
