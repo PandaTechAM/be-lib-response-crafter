@@ -1,4 +1,6 @@
-﻿using EFCoreQueryMagic.Exceptions;
+﻿using System.Reflection;
+using EFCoreQueryMagic.Exceptions;
+using FluentImporter.Exceptions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using ResponseCrafter.Dtos;
@@ -45,6 +47,9 @@ public class PandaExceptionHandler : IExceptionHandler
             case ServiceException serviceException:
                 await HandleServiceExceptionAsync(httpContext, serviceException, cancellationToken);
                 break;
+            case ImportException targetInvocationException:
+                await HandleImportExceptionAsync(httpContext, targetInvocationException, cancellationToken);
+                break;
             default:
                 await HandleGeneralExceptionAsync(httpContext, exception, cancellationToken);
                 break;
@@ -53,6 +58,24 @@ public class PandaExceptionHandler : IExceptionHandler
         return true;
     }
 
+    private async Task HandleImportExceptionAsync(HttpContext httpContext, ImportException importException,
+        CancellationToken cancellationToken)
+    {
+        switch (importException)
+        {
+            case InvalidColumnValueException _:
+            case InvalidPropertyNameException _:
+                var exceptionName = importException.GetType().Name;
+                var formattedMessage = $"{exceptionName} in Filters: {importException.Message}";
+                var mappedException = new BadRequestException(formattedMessage);
+                await HandleApiExceptionAsync(httpContext, mappedException, cancellationToken);
+                break;
+            default:
+                await HandleGeneralExceptionAsync(httpContext, importException, cancellationToken);
+                break;
+        }
+    }
+    
     private async Task HandleServiceExceptionAsync(HttpContext httpContext, ServiceException serviceException,
         CancellationToken cancellationToken)
     {
@@ -127,6 +150,7 @@ public class PandaExceptionHandler : IExceptionHandler
             case NoOrderingFoundException _:
             case PropertyNotFoundException _:
             case UnsupportedFilterException _:
+            case UnsupportedValueException _:
                 var exceptionName = filterException.GetType().Name;
                 var formattedMessage = $"{exceptionName} in Filters: {filterException.Message}";
                 var mappedException = new BadRequestException(formattedMessage);
