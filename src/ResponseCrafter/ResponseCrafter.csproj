@@ -25,7 +25,7 @@
     <ItemGroup>
         <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="8.0.3" />
         <PackageReference Include="Pandatech.EFCoreQueryMagic" Version="1.0.7" />
-        <PackageReference Include="PandaTech.FluentImporter" Version="2.0.5" />
+        <PackageReference Include="PandaTech.FluentImporter" Version="2.0.6" />
         <PackageReference Include="PandaTech.ServiceResponse" Version="1.2.12" />
     </ItemGroup>
 

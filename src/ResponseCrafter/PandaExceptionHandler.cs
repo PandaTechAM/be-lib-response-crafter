@@ -67,7 +67,7 @@ public class PandaExceptionHandler : IExceptionHandler
             case InvalidPropertyNameException _:
             case EmptyFileImportException _:
                 var exceptionName = importException.GetType().Name;
-                var formattedMessage = $"{exceptionName} in Import: {importException.Message}";
+                var formattedMessage = $"{exceptionName} in Import: {importException.Message} {importException.Value}";
                 var mappedException = new BadRequestException(formattedMessage);
                 await HandleApiExceptionAsync(httpContext, mappedException, cancellationToken);
                 break;
