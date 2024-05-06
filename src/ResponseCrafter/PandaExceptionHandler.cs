@@ -65,8 +65,9 @@ public class PandaExceptionHandler : IExceptionHandler
         {
             case InvalidColumnValueException _:
             case InvalidPropertyNameException _:
+            case EmptyFileImportException _:
                 var exceptionName = importException.GetType().Name;
-                var formattedMessage = $"{exceptionName} in Filters: {importException.Message}";
+                var formattedMessage = $"{exceptionName} in Import: {importException.Message}";
                 var mappedException = new BadRequestException(formattedMessage);
                 await HandleApiExceptionAsync(httpContext, mappedException, cancellationToken);
                 break;
