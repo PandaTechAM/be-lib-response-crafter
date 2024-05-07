@@ -1,4 +1,5 @@
 ﻿using System.Reflection;
+using BaseConverter.Exceptions;
 using EFCoreQueryMagic.Exceptions;
 using FluentImporter.Exceptions;
 using Microsoft.AspNetCore.Http;
@@ -50,12 +51,33 @@ public class PandaExceptionHandler : IExceptionHandler
             case ImportException targetInvocationException:
                 await HandleImportExceptionAsync(httpContext, targetInvocationException, cancellationToken);
                 break;
+            case BaseConverterException targetInvocationException:
+                await HandleBaseConverterExceptionAsync(httpContext, targetInvocationException, cancellationToken);
+                break;
             default:
                 await HandleGeneralExceptionAsync(httpContext, exception, cancellationToken);
                 break;
         }
 
         return true;
+    }
+    
+    private async Task HandleBaseConverterExceptionAsync(HttpContext httpContext, BaseConverterException importException,
+        CancellationToken cancellationToken)
+    {
+        switch (importException)
+        {
+            case InputValidationException _:
+            case UnsupportedCharacterException _:
+                var exceptionName = importException.GetType().Name;
+                var formattedMessage = $"{exceptionName} in Import: {importException.Message} {importException.Value}";
+                var mappedException = new BadRequestException(formattedMessage);
+                await HandleApiExceptionAsync(httpContext, mappedException, cancellationToken);
+                break;
+            default:
+                await HandleGeneralExceptionAsync(httpContext, importException, cancellationToken);
+                break;
+        }
     }
 
     private async Task HandleImportExceptionAsync(HttpContext httpContext, ImportException importException,
