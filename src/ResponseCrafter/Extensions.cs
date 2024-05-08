@@ -5,9 +5,25 @@ namespace ResponseCrafter;
 
 public static class Extensions
 {
-    public static WebApplicationBuilder AddResponseCrafter(this WebApplicationBuilder builder)
+    public static WebApplicationBuilder AddResponseCrafter(this WebApplicationBuilder builder, NamingConvention? namingConvention = null)
     {
         builder.Services.AddExceptionHandler<PandaExceptionHandler>();
+        
+        switch (namingConvention)
+        {
+            case null:
+            case NamingConvention.Default:
+                builder.Services.AddSingleton<Func<string, string>>(NamingConventionExtensions.Default);
+                break;
+            case NamingConvention.SnakeCaseLower:
+                builder.Services.AddSingleton<Func<string, string>>(NamingConventionExtensions.ToSnakeCaseLowerNamingConvention);
+                break;
+            case NamingConvention.SnakeCaseUpper:
+                builder.Services.AddSingleton<Func<string, string>>(NamingConventionExtensions.ToSnakeCaseUpperNamingConvention);
+                break;
+            default:
+                throw new ArgumentOutOfRangeException(nameof(namingConvention), namingConvention, null);
+        }
 
         return builder;
     }

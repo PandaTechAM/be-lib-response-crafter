@@ -18,12 +18,14 @@ public class PandaExceptionHandler : IExceptionHandler
 {
     private readonly ILogger<PandaExceptionHandler> _logger;
     private readonly string _visibility;
+    private readonly Func<string, string> _namingConventionConverter;
 
-    public PandaExceptionHandler(ILogger<PandaExceptionHandler> logger, IConfiguration configuration)
+    public PandaExceptionHandler(ILogger<PandaExceptionHandler> logger, IConfiguration configuration, Func<string, string> namingConventionConverter)
     {
         _logger = logger;
         _visibility = configuration["ResponseCrafterVisibility"]!;
-
+        _namingConventionConverter = namingConventionConverter;
+        
         if (string.IsNullOrEmpty(_visibility) || _visibility != "Private" && _visibility != "Public")
         {
             _visibility = "Public";
@@ -70,7 +72,7 @@ public class PandaExceptionHandler : IExceptionHandler
             case InputValidationException _:
             case UnsupportedCharacterException _:
                 var exceptionName = importException.GetType().Name;
-                var formattedMessage = $"{exceptionName} in Import: {importException.Message} {importException.Value}";
+                var formattedMessage = $"{exceptionName} in Base Converter: {_namingConventionConverter(importException.Message)}";
                 var mappedException = new BadRequestException(formattedMessage);
                 await HandleApiExceptionAsync(httpContext, mappedException, cancellationToken);
                 break;
@@ -89,7 +91,7 @@ public class PandaExceptionHandler : IExceptionHandler
             case InvalidPropertyNameException _:
             case EmptyFileImportException _:
                 var exceptionName = importException.GetType().Name;
-                var formattedMessage = $"{exceptionName} in Import: {importException.Message} {importException.Value}";
+                var formattedMessage = $"{exceptionName} in Import: {importException.Message}";
                 var mappedException = new BadRequestException(formattedMessage);
                 await HandleApiExceptionAsync(httpContext, mappedException, cancellationToken);
                 break;
@@ -111,7 +113,7 @@ public class PandaExceptionHandler : IExceptionHandler
 
         if (_visibility == "Private")
         {
-            response.Message = serviceException.Message;
+            response.Message = _namingConventionConverter(serviceException.Message);
         }
 
         httpContext.Response.StatusCode = (int)serviceException.ResponseStatus;
@@ -138,7 +140,7 @@ public class PandaExceptionHandler : IExceptionHandler
             StatusCode = exception.StatusCode,
             Type = exception.GetType().Name,
             Errors = exception.Errors,
-            Message = exception.Message
+            Message = _namingConventionConverter(exception.Message)
         };
 
         httpContext.Response.StatusCode = exception.StatusCode;
@@ -175,7 +177,7 @@ public class PandaExceptionHandler : IExceptionHandler
             case UnsupportedFilterException _:
             case UnsupportedValueException _:
                 var exceptionName = filterException.GetType().Name;
-                var formattedMessage = $"{exceptionName} in Filters: {filterException.Message}";
+                var formattedMessage = $"{exceptionName} in Filters: {_namingConventionConverter(filterException.Message)}";
                 var mappedException = new BadRequestException(formattedMessage);
                 await HandleApiExceptionAsync(httpContext, mappedException, cancellationToken);
                 break;
@@ -202,7 +204,7 @@ public class PandaExceptionHandler : IExceptionHandler
         if (_visibility == "Private")
         {
             response.Type = exception.GetType().Name;
-            response.Message = verboseMessage;
+            response.Message = _namingConventionConverter(verboseMessage);
         }
 
         httpContext.Response.StatusCode = response.StatusCode;
