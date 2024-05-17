@@ -20,12 +20,13 @@ public class PandaExceptionHandler : IExceptionHandler
     private readonly string _visibility;
     private readonly Func<string, string> _namingConventionConverter;
 
-    public PandaExceptionHandler(ILogger<PandaExceptionHandler> logger, IConfiguration configuration, Func<string, string> namingConventionConverter)
+    public PandaExceptionHandler(ILogger<PandaExceptionHandler> logger, IConfiguration configuration,
+        Func<string, string> namingConventionConverter)
     {
         _logger = logger;
         _visibility = configuration["ResponseCrafterVisibility"]!;
         _namingConventionConverter = namingConventionConverter;
-        
+
         if (string.IsNullOrEmpty(_visibility) || _visibility != "Private" && _visibility != "Public")
         {
             _visibility = "Public";
@@ -63,8 +64,9 @@ public class PandaExceptionHandler : IExceptionHandler
 
         return true;
     }
-    
-    private async Task HandleBaseConverterExceptionAsync(HttpContext httpContext, BaseConverterException importException,
+
+    private async Task HandleBaseConverterExceptionAsync(HttpContext httpContext,
+        BaseConverterException importException,
         CancellationToken cancellationToken)
     {
         switch (importException)
@@ -72,7 +74,8 @@ public class PandaExceptionHandler : IExceptionHandler
             case InputValidationException _:
             case UnsupportedCharacterException _:
                 var exceptionName = importException.GetType().Name;
-                var formattedMessage = $"{exceptionName} in Base Converter: {_namingConventionConverter(importException.Message)}";
+                var formattedMessage =
+                    $"{exceptionName} in Base Converter: {_namingConventionConverter(importException.Message)}";
                 var mappedException = new BadRequestException(formattedMessage);
                 await HandleApiExceptionAsync(httpContext, mappedException, cancellationToken);
                 break;
@@ -88,6 +91,7 @@ public class PandaExceptionHandler : IExceptionHandler
         switch (importException)
         {
             case InvalidColumnValueException _:
+            case InvalidCellValueException _:
             case InvalidPropertyNameException _:
             case EmptyFileImportException _:
                 var exceptionName = importException.GetType().Name;
@@ -100,7 +104,7 @@ public class PandaExceptionHandler : IExceptionHandler
                 break;
         }
     }
-    
+
     private async Task HandleServiceExceptionAsync(HttpContext httpContext, ServiceException serviceException,
         CancellationToken cancellationToken)
     {
@@ -177,7 +181,8 @@ public class PandaExceptionHandler : IExceptionHandler
             case UnsupportedFilterException _:
             case UnsupportedValueException _:
                 var exceptionName = filterException.GetType().Name;
-                var formattedMessage = $"{exceptionName} in Filters: {_namingConventionConverter(filterException.Message)}";
+                var formattedMessage =
+                    $"{exceptionName} in Filters: {_namingConventionConverter(filterException.Message)}";
                 var mappedException = new BadRequestException(formattedMessage);
                 await HandleApiExceptionAsync(httpContext, mappedException, cancellationToken);
                 break;
