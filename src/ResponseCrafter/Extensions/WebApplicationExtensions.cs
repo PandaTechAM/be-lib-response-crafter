@@ -1,9 +1,10 @@
 ﻿using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
+using ResponseCrafter.Enums;
 
-namespace ResponseCrafter;
+namespace ResponseCrafter.Extensions;
 
-public static class Extensions
+public static class WebApplicationExtensions
 {
     public static WebApplicationBuilder AddResponseCrafter(this WebApplicationBuilder builder, NamingConvention? namingConvention = null)
     {

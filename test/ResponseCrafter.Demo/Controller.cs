@@ -1,5 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using ResponseCrafter.StandardHttpExceptions;
+using ResponseCrafter.HttpExceptions;
 
 namespace ResponseCrafter.Demo;
 

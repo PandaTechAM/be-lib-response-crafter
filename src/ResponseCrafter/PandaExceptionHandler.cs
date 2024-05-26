@@ -8,8 +8,8 @@ using ResponseCrafter.Dtos;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using PandaTech.ServiceResponse;
-using ResponseCrafter.StandardHttpExceptions;
-using static ResponseCrafter.ExceptionMessageBuilder;
+using ResponseCrafter.HttpExceptions;
+using static ResponseCrafter.Helpers.ExceptionMessageBuilder;
 using IExceptionHandler = Microsoft.AspNetCore.Diagnostics.IExceptionHandler;
 
 namespace ResponseCrafter;

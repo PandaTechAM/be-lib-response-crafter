@@ -1,4 +1,4 @@
-namespace ResponseCrafter;
+namespace ResponseCrafter.Enums;
 
 public enum NamingConvention
 {

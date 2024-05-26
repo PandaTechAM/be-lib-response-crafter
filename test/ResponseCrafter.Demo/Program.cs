@@ -1,7 +1,9 @@
 using EFCoreQueryMagic.Exceptions;
 using ResponseCrafter;
-using ResponseCrafter.StandardHttpExceptions;
 using ResponseCrafter.Demo;
+using ResponseCrafter.Enums;
+using ResponseCrafter.Extensions;
+using ResponseCrafter.HttpExceptions;
 
 var builder = WebApplication.CreateBuilder(args);
 

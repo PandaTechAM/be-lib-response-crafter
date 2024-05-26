@@ -1,4 +1,4 @@
-﻿namespace ResponseCrafter.StandardHttpExceptions;
+﻿namespace ResponseCrafter.HttpExceptions;
 
 public class ConflictException(string message = ConflictException.DefaultMessage) : ApiException(409, message)
 {

@@ -1,7 +1,7 @@
 ﻿using System.Text;
 using Microsoft.AspNetCore.Http;
 
-namespace ResponseCrafter;
+namespace ResponseCrafter.Helpers;
 
 public static class ExceptionMessageBuilder
 {

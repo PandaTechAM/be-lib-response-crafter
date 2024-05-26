@@ -1,4 +1,4 @@
-﻿namespace ResponseCrafter.StandardHttpExceptions;
+﻿namespace ResponseCrafter.HttpExceptions;
 
 public class ServiceUnavailableException(string message = ServiceUnavailableException.DefaultMessage) : ApiException(503, message)
 {

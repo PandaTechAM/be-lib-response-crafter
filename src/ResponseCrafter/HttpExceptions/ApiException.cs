@@ -1,4 +1,4 @@
-﻿namespace ResponseCrafter;
+﻿namespace ResponseCrafter.HttpExceptions;
 
 public abstract class ApiException(int statusCode, string message,
     Dictionary<string, string>? errors = null): Exception(message)

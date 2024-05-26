@@ -1,4 +1,4 @@
-﻿namespace ResponseCrafter.StandardHttpExceptions;
+﻿namespace ResponseCrafter.HttpExceptions;
 
 public class ForbiddenException(string message = ForbiddenException.DefaultMessage) : ApiException(403, message)
 {
