@@ -1,4 +1,4 @@
-﻿namespace ResponseCrafter.StandardHttpExceptions;
+﻿namespace ResponseCrafter.HttpExceptions;
 
 public class PaymentRequiredException(string message = PaymentRequiredException.DefaultMessage) : ApiException(402, message)
 {

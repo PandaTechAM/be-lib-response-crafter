@@ -1,6 +1,6 @@
 using System.Text;
 
-namespace ResponseCrafter;
+namespace ResponseCrafter.Extensions;
 
 internal static class NamingConventionExtensions
 {

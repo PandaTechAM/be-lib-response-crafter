@@ -1,4 +1,4 @@
-﻿namespace ResponseCrafter.StandardHttpExceptions;
+﻿namespace ResponseCrafter.HttpExceptions;
 
 public class NotFoundException(string message = NotFoundException.DefaultMessage) : ApiException(404, message)
 {

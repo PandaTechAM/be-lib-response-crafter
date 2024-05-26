@@ -1,4 +1,4 @@
-﻿namespace ResponseCrafter.StandardHttpExceptions;
+﻿namespace ResponseCrafter.HttpExceptions;
 
 public class UnauthorizedException(string message = UnauthorizedException.DefaultMessage) : ApiException(401, message)
 {
