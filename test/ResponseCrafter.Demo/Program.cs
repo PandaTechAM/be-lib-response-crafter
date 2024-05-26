@@ -7,7 +7,8 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-builder.AddResponseCrafter();
+// builder.AddResponseCrafter();
+builder.AddResponseCrafter(NamingConvention.SnakeCaseUpper);
 
 builder.Services.AddControllers();
 var app = builder.Build();
@@ -22,6 +23,12 @@ var errors = new Dictionary<string, string>
     { "some_error", "some_error_message" },
     { "some_other_error", "some_other_error_message" }
 };
+
+// Test naming convension
+app.MapGet("/error-by-exception-to-convert-minimal", () =>
+{
+    throw new BadRequestException("Some exception. Try again");
+});
 
 app.MapGet("/error-by-exception-minimal", _ => throw new BadRequestException("some_exception"));
 app.MapGet("/error-by-result-minimal", () => Results.BadRequest("some_exception"));
