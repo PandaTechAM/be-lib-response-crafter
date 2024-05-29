@@ -8,13 +8,13 @@
         <Copyright>MIT</Copyright>
         <PackageIcon>pandatech.png</PackageIcon>
         <PackageReadmeFile>Readme.md</PackageReadmeFile>
-        <Version>1.5.1</Version>
+        <Version>1.6.0</Version>
         <PackageId>Pandatech.ResponseCrafter</PackageId>
         <PackageTags>Pandatech, library, exception handler, exception, middleware, Api response</PackageTags>
         <Title>ResponseCrafter</Title>
         <Description>Handling exceptions, custom Dtos.</Description>
         <RepositoryUrl>https://github.com/PandaTechAM/be-lib-response-crafter</RepositoryUrl>
-        <PackageReleaseNotes>Minimal api extension has been added. Also namespace changes might occur</PackageReleaseNotes>
+        <PackageReleaseNotes>PagedResponse class is removed and transferred to EFCoreQueryMagic nuget</PackageReleaseNotes>
     </PropertyGroup>
 
     <ItemGroup>
