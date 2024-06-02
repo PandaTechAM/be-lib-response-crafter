@@ -10,4 +10,14 @@ public static class MinimalApiExtensions
     {
         return builder.Produces<ErrorResponse>(statusCode);
     }
+
+    public static RouteHandlerBuilder ProducesErrorResponse(this RouteHandlerBuilder builder, params int[] statusCodes)
+    {
+        foreach (var statusCode in statusCodes)
+        {
+            builder.Produces<ErrorResponse>(statusCode);
+        }
+
+        return builder;
+    }
 }
