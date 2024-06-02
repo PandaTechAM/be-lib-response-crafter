@@ -27,10 +27,8 @@ var errors = new Dictionary<string, string>
 };
 
 // Test naming convension
-app.MapGet("/error-by-exception-to-convert-minimal", () =>
-{
-    throw new BadRequestException("Some exception. Try again");
-});
+app.MapGet("/error-by-exception-to-convert-minimal",
+    () => { throw new BadRequestException("Some exception. Try again"); }).ProducesErrorResponse(400, 401, 404);
 
 app.MapGet("/error-by-exception-minimal", _ => throw new BadRequestException("some_exception"));
 app.MapGet("/error-by-result-minimal", () => Results.BadRequest("some_exception"));
@@ -45,10 +43,7 @@ app.MapGet("/token", (HttpContext httpContext) =>
 
 
 app.MapGet("/server-error", (Exception) => throw new Exception("some_unhandled_exception"));
-app.MapGet("/bad-request", () =>
-{
-    throw new BadRequestException(errors);
-});
+app.MapGet("/bad-request", () => { throw new BadRequestException(errors); });
 app.MapGet("/unauthorized", (ApiException) => throw new UnauthorizedException());
 app.MapGet("/filter", (apiException) => throw new ComparisonNotSupportedException("some_exception"))
     .WithTags("something");
