@@ -175,8 +175,7 @@ public class PandaExceptionHandler : IExceptionHandler
         switch (filterException)
         {
             case ComparisonNotSupportedException _:
-            case MappingException _:
-            case NoOrderingFoundException _:
+            case PaginationException _:
             case PropertyNotFoundException _:
             case UnsupportedFilterException _:
             case UnsupportedValueException _:
