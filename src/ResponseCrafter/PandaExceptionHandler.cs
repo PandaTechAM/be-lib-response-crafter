@@ -179,6 +179,8 @@ public class PandaExceptionHandler : IExceptionHandler
             case PropertyNotFoundException _:
             case UnsupportedFilterException _:
             case UnsupportedValueException _:
+            case AggregateTypeMissingException _:
+            case ColumnNameMissingException _:
                 var exceptionName = filterException.GetType().Name;
                 var formattedMessage =
                     $"{exceptionName} in Filters: {_namingConventionConverter(filterException.Message)}";
