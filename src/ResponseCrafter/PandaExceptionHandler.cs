@@ -1,5 +1,4 @@
-﻿using System.Reflection;
-using BaseConverter.Exceptions;
+﻿using BaseConverter.Exceptions;
 using EFCoreQueryMagic.Exceptions;
 using FluentImporter.Exceptions;
 using Microsoft.AspNetCore.Http;
@@ -75,7 +74,7 @@ public class PandaExceptionHandler : IExceptionHandler
             case UnsupportedCharacterException _:
                 var exceptionName = importException.GetType().Name;
                 var formattedMessage =
-                    $"{exceptionName} in Base Converter: {_namingConventionConverter(importException.Message)}";
+                    $"{exceptionName} in Base Converter: {importException.Message}";
                 var mappedException = new BadRequestException(formattedMessage);
                 await HandleApiExceptionAsync(httpContext, mappedException, cancellationToken);
                 break;
@@ -183,7 +182,7 @@ public class PandaExceptionHandler : IExceptionHandler
             case ColumnNameMissingException _:
                 var exceptionName = filterException.GetType().Name;
                 var formattedMessage =
-                    $"{exceptionName} in Filters: {_namingConventionConverter(filterException.Message)}";
+                    $"{exceptionName} in Filters: {filterException.Message}";
                 var mappedException = new BadRequestException(formattedMessage);
                 await HandleApiExceptionAsync(httpContext, mappedException, cancellationToken);
                 break;
