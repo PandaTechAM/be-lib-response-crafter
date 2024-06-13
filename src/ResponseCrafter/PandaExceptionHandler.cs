@@ -1,14 +1,17 @@
-﻿using System.Reflection;
-using BaseConverter.Exceptions;
+﻿using BaseConverter.Exceptions;
 using EFCoreQueryMagic.Exceptions;
 using FluentImporter.Exceptions;
+using GridifyExtensions.Exceptions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using ResponseCrafter.Dtos;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using PandaTech.ServiceResponse;
+using ResponseCrafter.Enums;
+using ResponseCrafter.Extensions;
 using ResponseCrafter.HttpExceptions;
+using ResponseCrafter.Options;
 using static ResponseCrafter.Helpers.ExceptionMessageBuilder;
 using IExceptionHandler = Microsoft.AspNetCore.Diagnostics.IExceptionHandler;
 
@@ -17,17 +20,22 @@ namespace ResponseCrafter;
 public class PandaExceptionHandler : IExceptionHandler
 {
     private readonly ILogger<PandaExceptionHandler> _logger;
+    private readonly NamingConvention _convention;
     private readonly string _visibility;
-    private readonly Func<string, string> _namingConventionConverter;
+    private const string DefaultMessage = "something_went_wrong_please_try_again_later_and_or_contact_it_support";
+
+    private const string ConcurrencyMessage =
+        "a_concurrency_conflict_occurred._please_reload_the_resource_and_try_you_update_again";
 
     public PandaExceptionHandler(ILogger<PandaExceptionHandler> logger, IConfiguration configuration,
-        Func<string, string> namingConventionConverter)
+        NamingConventionOptions convention)
     {
         _logger = logger;
+        _convention = convention.NamingConvention;
         _visibility = configuration["ResponseCrafterVisibility"]!;
-        _namingConventionConverter = namingConventionConverter;
 
-        if (string.IsNullOrEmpty(_visibility) || _visibility != "Private" && _visibility != "Public")
+
+        if (string.IsNullOrWhiteSpace(_visibility) || _visibility != "Private" && _visibility != "Public")
         {
             _visibility = "Public";
             _logger.LogWarning("Visibility configuration was not available. Defaulted to 'Public'.");
@@ -39,23 +47,27 @@ public class PandaExceptionHandler : IExceptionHandler
     {
         switch (exception)
         {
-            case ApiException apiException:
-                await HandleApiExceptionAsync(httpContext, apiException, cancellationToken);
-                break;
             case DbUpdateConcurrencyException:
                 await HandleDbConcurrencyExceptionAsync(httpContext, cancellationToken);
                 break;
-            case FilterException filterException:
-                await HandleFilterExceptionAsync(httpContext, filterException, cancellationToken);
-                break;
-            case ServiceException serviceException:
-                await HandleServiceExceptionAsync(httpContext, serviceException, cancellationToken);
+            case BaseConverterException targetInvocationException:
+                await HandleBaseConverterExceptionAsync(httpContext, targetInvocationException, cancellationToken);
                 break;
             case ImportException targetInvocationException:
                 await HandleImportExceptionAsync(httpContext, targetInvocationException, cancellationToken);
                 break;
-            case BaseConverterException targetInvocationException:
-                await HandleBaseConverterExceptionAsync(httpContext, targetInvocationException, cancellationToken);
+            case ServiceException serviceException:
+                await HandleServiceExceptionAsync(httpContext, serviceException, cancellationToken);
+                break;
+            case FilterException filterException:
+                await HandleFilterExceptionAsync(httpContext, filterException, cancellationToken);
+                break;
+            case GridifyException gridifyException:
+                await HandleGridifyExceptionAsync(httpContext, gridifyException, cancellationToken);
+                break;
+
+            case ApiException apiException:
+                await HandleApiExceptionAsync(httpContext, apiException, cancellationToken);
                 break;
             default:
                 await HandleGeneralExceptionAsync(httpContext, exception, cancellationToken);
@@ -63,6 +75,14 @@ public class PandaExceptionHandler : IExceptionHandler
         }
 
         return true;
+    }
+
+
+    private async Task HandleDbConcurrencyExceptionAsync(HttpContext httpContext, CancellationToken cancellationToken)
+    {
+        var exception =
+            new ConflictException(ConcurrencyMessage.ConvertCase(_convention));
+        await HandleApiExceptionAsync(httpContext, exception, cancellationToken);
     }
 
     private async Task HandleBaseConverterExceptionAsync(HttpContext httpContext,
@@ -73,10 +93,7 @@ public class PandaExceptionHandler : IExceptionHandler
         {
             case InputValidationException _:
             case UnsupportedCharacterException _:
-                var exceptionName = importException.GetType().Name;
-                var formattedMessage =
-                    $"{exceptionName} in Base Converter: {_namingConventionConverter(importException.Message)}";
-                var mappedException = new BadRequestException(formattedMessage);
+                var mappedException = new BadRequestException(importException.Message.ConvertCase(_convention));
                 await HandleApiExceptionAsync(httpContext, mappedException, cancellationToken);
                 break;
             default:
@@ -94,9 +111,7 @@ public class PandaExceptionHandler : IExceptionHandler
             case InvalidCellValueException _:
             case InvalidPropertyNameException _:
             case EmptyFileImportException _:
-                var exceptionName = importException.GetType().Name;
-                var formattedMessage = $"{exceptionName} in Import: {importException.Message}";
-                var mappedException = new BadRequestException(formattedMessage);
+                var mappedException = new BadRequestException(importException.Message.ConvertCase(_convention));
                 await HandleApiExceptionAsync(httpContext, mappedException, cancellationToken);
                 break;
             default:
@@ -110,14 +125,14 @@ public class PandaExceptionHandler : IExceptionHandler
     {
         var response = new ServiceResponse
         {
-            Message = "a_concurrency_conflict_occurred._please_reload_the_resource_and_try_you_update_again",
+            Message = DefaultMessage.ConvertCase(_convention),
             ResponseStatus = serviceException.ResponseStatus,
             Success = false
         };
 
         if (_visibility == "Private")
         {
-            response.Message = _namingConventionConverter(serviceException.Message);
+            response.Message = serviceException.Message.ConvertCase(_convention);
         }
 
         httpContext.Response.StatusCode = (int)serviceException.ResponseStatus;
@@ -134,6 +149,35 @@ public class PandaExceptionHandler : IExceptionHandler
         await httpContext.Response.WriteAsJsonAsync(response, cancellationToken);
     }
 
+
+    private async Task HandleFilterExceptionAsync(HttpContext httpContext, FilterException filterException,
+        CancellationToken cancellationToken)
+    {
+        switch (filterException)
+        {
+            case ComparisonNotSupportedException _:
+            case PaginationException _:
+            case PropertyNotFoundException _:
+            case UnsupportedFilterException _:
+            case UnsupportedValueException _:
+            case AggregateTypeMissingException _:
+            case ColumnNameMissingException _:
+                var mappedException = new BadRequestException(filterException.Message.ConvertCase(_convention));
+                await HandleApiExceptionAsync(httpContext, mappedException, cancellationToken);
+                break;
+            default:
+                await HandleGeneralExceptionAsync(httpContext, filterException, cancellationToken);
+                break;
+        }
+    }
+
+    private async Task HandleGridifyExceptionAsync(HttpContext httpContext, GridifyException gridifyException,
+        CancellationToken cancellationToken)
+    {
+        var exception = new BadRequestException(gridifyException.Message.ConvertCase(_convention));
+        await HandleApiExceptionAsync(httpContext, exception, cancellationToken);
+    }
+
     private async Task HandleApiExceptionAsync(HttpContext httpContext, ApiException exception,
         CancellationToken cancellationToken)
     {
@@ -144,7 +188,7 @@ public class PandaExceptionHandler : IExceptionHandler
             StatusCode = exception.StatusCode,
             Type = exception.GetType().Name,
             Errors = exception.Errors,
-            Message = _namingConventionConverter(exception.Message)
+            Message = exception.Message.ConvertCase(_convention)
         };
 
         httpContext.Response.StatusCode = exception.StatusCode;
@@ -161,38 +205,6 @@ public class PandaExceptionHandler : IExceptionHandler
         }
     }
 
-    private async Task HandleDbConcurrencyExceptionAsync(HttpContext httpContext, CancellationToken cancellationToken)
-    {
-        var exception =
-            new ConflictException(
-                "a_concurrency_conflict_occurred._please_reload_the_resource_and_try_you_update_again");
-        await HandleApiExceptionAsync(httpContext, exception, cancellationToken);
-    }
-
-    private async Task HandleFilterExceptionAsync(HttpContext httpContext, FilterException filterException,
-        CancellationToken cancellationToken)
-    {
-        switch (filterException)
-        {
-            case ComparisonNotSupportedException _:
-            case PaginationException _:
-            case PropertyNotFoundException _:
-            case UnsupportedFilterException _:
-            case UnsupportedValueException _:
-            case AggregateTypeMissingException _:
-            case ColumnNameMissingException _:
-                var exceptionName = filterException.GetType().Name;
-                var formattedMessage =
-                    $"{exceptionName} in Filters: {_namingConventionConverter(filterException.Message)}";
-                var mappedException = new BadRequestException(formattedMessage);
-                await HandleApiExceptionAsync(httpContext, mappedException, cancellationToken);
-                break;
-            default:
-                await HandleGeneralExceptionAsync(httpContext, filterException, cancellationToken);
-                break;
-        }
-    }
-
     private async Task HandleGeneralExceptionAsync(HttpContext httpContext, Exception exception,
         CancellationToken cancellationToken)
     {
@@ -204,13 +216,13 @@ public class PandaExceptionHandler : IExceptionHandler
             Instance = CreateRequestPath(httpContext),
             StatusCode = 500,
             Type = "InternalServerError",
-            Message = "something_went_wrong_please_try_again_later_and_or_contact_it_support"
+            Message = DefaultMessage.ConvertCase(_convention)
         };
 
         if (_visibility == "Private")
         {
             response.Type = exception.GetType().Name;
-            response.Message = _namingConventionConverter(verboseMessage);
+            response.Message = verboseMessage.ConvertCase(_convention);
         }
 
         httpContext.Response.StatusCode = response.StatusCode;

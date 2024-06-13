@@ -1,5 +1,6 @@
 using EFCoreQueryMagic.Exceptions;
-using ResponseCrafter;
+using Humanizer;
+using Microsoft.AspNetCore.Mvc;
 using ResponseCrafter.Demo;
 using ResponseCrafter.Enums;
 using ResponseCrafter.Extensions;
@@ -9,8 +10,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-// builder.AddResponseCrafter();
-builder.AddResponseCrafter(NamingConvention.SnakeCaseUpper);
+builder.AddResponseCrafter(NamingConvention.ToSnakeCase);
 
 builder.Services.AddControllers();
 var app = builder.Build();
@@ -41,6 +41,26 @@ app.MapGet("/token", (HttpContext httpContext) =>
     // return httpContext.GetToken();
 });
 
+app.MapPost("/humanizer", ([FromQuery] string input, [FromQuery] NamingConvention convention) =>
+{
+    switch (convention)
+    {
+        case NamingConvention.ToSnakeCase:
+            return Results.Ok(input.Underscore());
+        case NamingConvention.ToKebabCase:
+            return Results.Ok(input.Underscore().Kebaberize());
+        case NamingConvention.ToCamelCase:
+            return Results.Ok(input.Underscore().Camelize());
+        case NamingConvention.ToPascalCase:
+            return Results.Ok(input.Underscore().Pascalize());
+        case NamingConvention.ToTitleCase:
+            return Results.Ok(input.Underscore().Titleize());
+        case NamingConvention.ToHumanCase:
+            return Results.Ok(input.Underscore().Humanize());
+    }
+
+    return Results.Ok(input);
+});
 
 app.MapGet("/server-error", (Exception) => throw new Exception("some_unhandled_exception"));
 app.MapGet("/bad-request", () => { throw new BadRequestException(errors); });
