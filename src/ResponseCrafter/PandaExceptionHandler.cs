@@ -1,5 +1,4 @@
 ﻿using BaseConverter.Exceptions;
-using EFCoreQueryMagic.Exceptions;
 using FluentImporter.Exceptions;
 using GridifyExtensions.Exceptions;
 using Microsoft.AspNetCore.Http;
@@ -58,9 +57,6 @@ public class PandaExceptionHandler : IExceptionHandler
                 break;
             case ServiceException serviceException:
                 await HandleServiceExceptionAsync(httpContext, serviceException, cancellationToken);
-                break;
-            case FilterException filterException:
-                await HandleFilterExceptionAsync(httpContext, filterException, cancellationToken);
                 break;
             case GridifyException gridifyException:
                 await HandleGridifyExceptionAsync(httpContext, gridifyException, cancellationToken);
@@ -149,27 +145,6 @@ public class PandaExceptionHandler : IExceptionHandler
         await httpContext.Response.WriteAsJsonAsync(response, cancellationToken);
     }
 
-
-    private async Task HandleFilterExceptionAsync(HttpContext httpContext, FilterException filterException,
-        CancellationToken cancellationToken)
-    {
-        switch (filterException)
-        {
-            case ComparisonNotSupportedException _:
-            case PaginationException _:
-            case PropertyNotFoundException _:
-            case UnsupportedFilterException _:
-            case UnsupportedValueException _:
-            case AggregateTypeMissingException _:
-            case ColumnNameMissingException _:
-                var mappedException = new BadRequestException(filterException.Message.ConvertCase(_convention));
-                await HandleApiExceptionAsync(httpContext, mappedException, cancellationToken);
-                break;
-            default:
-                await HandleGeneralExceptionAsync(httpContext, filterException, cancellationToken);
-                break;
-        }
-    }
 
     private async Task HandleGridifyExceptionAsync(HttpContext httpContext, GridifyException gridifyException,
         CancellationToken cancellationToken)

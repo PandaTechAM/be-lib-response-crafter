@@ -1,4 +1,3 @@
-using EFCoreQueryMagic.Exceptions;
 using Humanizer;
 using Microsoft.AspNetCore.Mvc;
 using ResponseCrafter.Demo;
@@ -65,15 +64,7 @@ app.MapPost("/humanizer", ([FromQuery] string input, [FromQuery] NamingConventio
 app.MapGet("/server-error", (Exception) => throw new Exception("some_unhandled_exception"));
 app.MapGet("/bad-request", () => { throw new BadRequestException(errors); });
 app.MapGet("/unauthorized", (ApiException) => throw new UnauthorizedException());
-app.MapGet("/filter", (apiException) => throw new ComparisonNotSupportedException("some_exception"))
-    .WithTags("something");
 
-app.MapPost("/load-minimal", async (TestDto dto) =>
-{
-    throw new MappingException("d");
-    await Task.Delay(77);
-    return Results.Ok(dto);
-});
 
 app.MapControllers();
 
