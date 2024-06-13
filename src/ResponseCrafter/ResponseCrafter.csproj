@@ -8,13 +8,13 @@
         <Copyright>MIT</Copyright>
         <PackageIcon>pandatech.png</PackageIcon>
         <PackageReadmeFile>Readme.md</PackageReadmeFile>
-        <Version>1.6.3</Version>
+        <Version>1.7.0</Version>
         <PackageId>Pandatech.ResponseCrafter</PackageId>
         <PackageTags>Pandatech, library, exception handler, exception, middleware, Api response</PackageTags>
         <Title>ResponseCrafter</Title>
         <Description>Handling exceptions, custom Dtos.</Description>
         <RepositoryUrl>https://github.com/PandaTechAM/be-lib-response-crafter</RepositoryUrl>
-        <PackageReleaseNotes>EfCore Magic exception handling update</PackageReleaseNotes>
+        <PackageReleaseNotes>Naming convention has been added</PackageReleaseNotes>
     </PropertyGroup>
 
     <ItemGroup>
@@ -23,9 +23,11 @@
     </ItemGroup>
 
     <ItemGroup>
+        <PackageReference Include="Humanizer" Version="2.14.1" />
         <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="8.0.6" />
         <PackageReference Include="Pandatech.EFCoreQueryMagic" Version="2.0.1" />
         <PackageReference Include="PandaTech.FluentImporter" Version="2.0.12" />
+        <PackageReference Include="Pandatech.GridifyExtensions" Version="1.0.5" />
         <PackageReference Include="PandaTech.ServiceResponse" Version="1.2.12" />
     </ItemGroup>
 
