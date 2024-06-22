@@ -12,9 +12,12 @@ crafting detailed error responses suitable for both development and production e
   exceptions.
 * **Detailed Error Responses:** Generates verbose error messages, including stack traces for in-depth debugging in
   development environments.
-* **Environment-Sensitive Logging:** Provides flexible logging and response behavior based on visibility settings (`Public` or `Private`):
-  - **Private:** All exceptions are sent to the client as defined, and 4xx errors are logged as warnings while 5xx errors are logged as errors.
-  - **Public:** 4xx exceptions are sent to the client as defined, while 5xx errors are concealed with a generic message. Logging remains the same as in `Private`.
+* **Environment-Sensitive Logging:** Provides flexible logging and response behavior based on visibility
+  settings (`Public` or `Private`):
+    - **Private:** All exceptions are sent to the client as defined, and 4xx errors are logged as warnings while 5xx
+      errors are logged as errors.
+    - **Public:** 4xx exceptions are sent to the client as defined, while 5xx errors are concealed with a generic
+      message. Logging remains the same as in `Private`.
 * **Frontend-Friendly Error Messages:** Supports converting error messages to your desired case convention, facilitating
   easier integration with frontend localization systems.
 * **Standardized Error Responses:** Provides a standardized error response format, making it easier for frontend
@@ -115,6 +118,34 @@ The package automatically logs warnings or errors and provides crafted responses
 * `TooManyRequestsException`
 * `InternalServerErrorException`
 * `ServiceUnavailableException`
+
+### Custom Exception Helper Methods
+
+Using exception helpers:
+
+```csharp
+decimal? price = -10.5m;
+BadRequestException.ThrowIfNullOrNegative(price, "price");
+
+string? username = "   ";
+//For 400 Bad Request
+BadRequestException.ThrowIfNullOrWhiteSpace(username, "username");
+//For 404 Not Found
+NotFoundException.ThrowIfNullOrWhiteSpace(username, "username");
+
+List<string?>? tags = new List<string?> { "tag1", " ", null };
+BadRequestException.ThrowIfNullOrWhiteSpace(tags, "tags");
+
+object? user = null;
+//For 400 Bad Request
+BadRequestException.ThrowIfNull(user, "user");
+//For 404 Not Found
+NotFoundException.ThrowIfNull(user, "user");
+```
+
+These examples show how to use the `ThrowIfNullOrNegative`, `ThrowIfNullOrWhiteSpace`, and `ThrowIfNull` helper methods
+from `BadRequestException` and `NotFoundException`. Adjust the object names and values according to your specific
+application needs.
 
 ## Recommendations
 
