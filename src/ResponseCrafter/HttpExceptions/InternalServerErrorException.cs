@@ -22,6 +22,14 @@ public class InternalServerErrorException : ApiException
         }
     }
 
+    public static void ThrowIfNull(object? value, string? nameOfValue = null)
+    {
+        if (value is null)
+        {
+            throw new InternalServerErrorException($"{DefaultMessage}{nameOfValue ?? ""}");
+        }
+    }
+
     public static void ThrowIfNullOrWhiteSpace(string? value, string? nameOfValue = null)
     {
         if (string.IsNullOrWhiteSpace(value))
