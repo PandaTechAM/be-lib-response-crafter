@@ -125,26 +125,36 @@ Using exception helpers:
 
 ```csharp
 decimal? price = -10.5m;
-BadRequestException.ThrowIfNullOrNegative(price, "price");
+//For 400 Bad Request
+BadRequestException.ThrowIfNullOrNegative(price, "Price is negative");
+//For 500 Internal Server Error
+InternalServerErrorException.ThrowIfNullOrNegative(price, "Price");
 
 string? username = "   ";
 //For 400 Bad Request
-BadRequestException.ThrowIfNullOrWhiteSpace(username, "username");
+BadRequestException.ThrowIfNullOrWhiteSpace(username, "Please provide username");
 //For 404 Not Found
 NotFoundException.ThrowIfNullOrWhiteSpace(username, "username");
+//For 500 Internal Server Error
+InternalServerErrorException.ThrowIfNullOrWhiteSpace(username, "username");
 
 List<string?>? tags = new List<string?> { "tag1", " ", null };
+//For 400 Bad Request
 BadRequestException.ThrowIfNullOrWhiteSpace(tags, "tags");
+//For 500 Internal Server Error
+InternalServerErrorException.ThrowIfNullOrWhiteSpace(tags, "tags");
 
 object? user = null;
 //For 400 Bad Request
-BadRequestException.ThrowIfNull(user, "user");
+BadRequestException.ThrowIfNull(user, "Please provide user");
 //For 404 Not Found
 NotFoundException.ThrowIfNull(user, "user");
+//For 500 Internal Server Error
+InternalServerErrorException.ThrowIfNull(user, "user");
 ```
 
 These examples show how to use the `ThrowIfNullOrNegative`, `ThrowIfNullOrWhiteSpace`, and `ThrowIfNull` helper methods
-from `BadRequestException` and `NotFoundException`. Adjust the object names and values according to your specific
+from `BadRequestException`, `InternalServerErrorException` and `NotFoundException`. Adjust the object names and values according to your specific
 application needs.
 
 ## Recommendations
