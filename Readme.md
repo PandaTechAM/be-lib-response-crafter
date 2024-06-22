@@ -141,6 +141,8 @@ InternalServerErrorException.ThrowIfNullOrWhiteSpace(username, "username");
 List<string?>? tags = new List<string?> { "tag1", " ", null };
 //For 400 Bad Request
 BadRequestException.ThrowIfNullOrWhiteSpace(tags, "tags");
+//For 404 Not Found
+NotFoundException.ThrowIfNullOrWhiteSpace(tags, "tags");
 //For 500 Internal Server Error
 InternalServerErrorException.ThrowIfNullOrWhiteSpace(tags, "tags");
 
