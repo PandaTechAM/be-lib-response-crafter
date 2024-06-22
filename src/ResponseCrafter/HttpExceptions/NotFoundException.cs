@@ -19,4 +19,12 @@ public class NotFoundException(string message = NotFoundException.DefaultMessage
             throw new NotFoundException($"{nameOfValue ?? "the_requested_resource"}_was_not_found.");
         }
     }
+    
+    public static void ThrowIfNullOrWhiteSpace(List<string?>? values, string? nameOfValue = null)
+    {
+        if (values is null || values.Count == 0 || values.Any(string.IsNullOrWhiteSpace))
+        {
+            throw new BadRequestException($"{nameOfValue ?? "the_requested_resource"}_was_not_found.");
+        }
+    }
 }
