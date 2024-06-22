@@ -13,4 +13,28 @@ public class InternalServerErrorException : ApiException
         : base(500, DefaultMessage, errors)
     {
     }
+
+    public static void ThrowIfNullOrNegative(decimal? value, string? nameOfValue = null)
+    {
+        if (value is < 0 or null)
+        {
+            throw new InternalServerErrorException($"{DefaultMessage}{nameOfValue ?? ""}");
+        }
+    }
+
+    public static void ThrowIfNullOrWhiteSpace(string? value, string? nameOfValue = null)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            throw new InternalServerErrorException($"{DefaultMessage}{nameOfValue ?? ""}");
+        }
+    }
+
+    public static void ThrowIfNullOrWhiteSpace(List<string?>? values, string? nameOfValue = null)
+    {
+        if (values is null || values.Count == 0 || values.Any(string.IsNullOrWhiteSpace))
+        {
+            throw new InternalServerErrorException($"{DefaultMessage}{nameOfValue ?? ""}");
+        }
+    }
 }
