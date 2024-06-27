@@ -119,27 +119,33 @@ public class PandaExceptionHandler : IExceptionHandler
     private async Task HandleServiceExceptionAsync(HttpContext httpContext, ServiceException serviceException,
         CancellationToken cancellationToken)
     {
+        var originalMessage = serviceException.Message.ConvertCase(_convention);
+
         var response = new ServiceResponse
         {
-            Message = DefaultMessage.ConvertCase(_convention),
+            Message = originalMessage,
             ResponseStatus = serviceException.ResponseStatus,
             Success = false
         };
 
-        if (_visibility == "Private")
+        httpContext.Response.StatusCode = (int)serviceException.ResponseStatus;
+
+        if (_visibility == "Public")
         {
-            response.Message = serviceException.Message.ConvertCase(_convention);
+            if (httpContext.Response.StatusCode >= 500)
+            {
+                response.Message = DefaultMessage.ConvertCase(_convention);
+            }
         }
 
-        httpContext.Response.StatusCode = (int)serviceException.ResponseStatus;
 
         if (httpContext.Response.StatusCode >= 500)
         {
-            _logger.LogError("ServiceException encountered: {ExceptionMessage}", serviceException.Message);
+            _logger.LogError("ServiceException encountered: {ExceptionMessage}", originalMessage);
         }
         else
         {
-            _logger.LogWarning("ServiceException encountered: {ExceptionMessage}", serviceException.Message);
+            _logger.LogWarning("ServiceException encountered: {ExceptionMessage}", originalMessage);
         }
 
         await httpContext.Response.WriteAsJsonAsync(response, cancellationToken);
