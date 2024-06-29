@@ -128,31 +128,37 @@ decimal? price = -10.5m;
 //For 400 Bad Request
 BadRequestException.ThrowIfNullOrNegative(price, "Price is negative");
 //For 500 Internal Server Error
-InternalServerErrorException.ThrowIfNullOrNegative(price, "Price");
+InternalServerErrorException.ThrowIfNullOrNegative(price, "Price is negative");
 
 string? username = "   ";
 //For 400 Bad Request
 BadRequestException.ThrowIfNullOrWhiteSpace(username, "Please provide username");
 //For 404 Not Found
-NotFoundException.ThrowIfNullOrWhiteSpace(username, "username");
+NotFoundException.ThrowIfNullOrWhiteSpace(username);
 //For 500 Internal Server Error
-InternalServerErrorException.ThrowIfNullOrWhiteSpace(username, "username");
+InternalServerErrorException.ThrowIfNullOrWhiteSpace(username, "Price is negative");
 
 List<string?>? tags = new List<string?> { "tag1", " ", null };
 //For 400 Bad Request
-BadRequestException.ThrowIfNullOrWhiteSpace(tags, "tags");
+BadRequestException.ThrowIfNullOrWhiteSpace(tags);
 //For 404 Not Found
-NotFoundException.ThrowIfNullOrWhiteSpace(tags, "tags");
+NotFoundException.ThrowIfNullOrWhiteSpace(tags);
 //For 500 Internal Server Error
-InternalServerErrorException.ThrowIfNullOrWhiteSpace(tags, "tags");
+InternalServerErrorException.ThrowIfNullOrWhiteSpace(tags);
 
 object? user = null;
 //For 400 Bad Request
 BadRequestException.ThrowIfNull(user, "Please provide user");
 //For 404 Not Found
-NotFoundException.ThrowIfNull(user, "user");
+NotFoundException.ThrowIfNull(user, "Please provide user");
 //For 500 Internal Server Error
-InternalServerErrorException.ThrowIfNull(user, "user");
+InternalServerErrorException.ThrowIfNull(user, "Please provide user");
+
+bool userUnauthorized = false;
+//For 401 Unauthorized
+UnauthorizedException.ThrowIf(userUnauthorized, "User is unauthorized");
+//For 500 Internal Server Error
+InternalServerErrorException.ThrowIf(userUnauthorized, "User is unauthorized");
 ```
 
 These examples show how to use the `ThrowIfNullOrNegative`, `ThrowIfNullOrWhiteSpace`, and `ThrowIfNull` helper methods

@@ -1,4 +1,6 @@
-﻿namespace ResponseCrafter.HttpExceptions;
+﻿using System.Diagnostics.CodeAnalysis;
+
+namespace ResponseCrafter.HttpExceptions;
 
 public class InternalServerErrorException : ApiException
 {
@@ -13,36 +15,44 @@ public class InternalServerErrorException : ApiException
         : base(500, DefaultMessage, errors)
     {
     }
-
-    public static void ThrowIfNullOrNegative(decimal? value, string? nameOfValue = null)
-    {
-        if (value is < 0 or null)
-        {
-            throw new InternalServerErrorException($"{DefaultMessage}{nameOfValue ?? ""}");
-        }
-    }
-
-    public static void ThrowIfNull(object? value, string? nameOfValue = null)
+    
+    public static void ThrowIfNull([NotNull] object? value, string exceptionMessage)
     {
         if (value is null)
         {
-            throw new InternalServerErrorException($"{DefaultMessage}{nameOfValue ?? ""}");
+            throw new InternalServerErrorException(exceptionMessage);
         }
     }
 
-    public static void ThrowIfNullOrWhiteSpace(string? value, string? nameOfValue = null)
+    public static void ThrowIfNullOrWhiteSpace([NotNull] string? value, string exceptionMessage)
     {
         if (string.IsNullOrWhiteSpace(value))
         {
-            throw new InternalServerErrorException($"{DefaultMessage}{nameOfValue ?? ""}");
+            throw new InternalServerErrorException(exceptionMessage);
         }
     }
 
-    public static void ThrowIfNullOrWhiteSpace(List<string?>? values, string? nameOfValue = null)
+    public static void ThrowIfNullOrWhiteSpace([NotNull] List<string?>? values, string exceptionMessage)
     {
         if (values is null || values.Count == 0 || values.Any(string.IsNullOrWhiteSpace))
         {
-            throw new InternalServerErrorException($"{DefaultMessage}{nameOfValue ?? ""}");
+            throw new InternalServerErrorException(exceptionMessage);
+        }
+    }
+
+    public static void ThrowIf(bool condition, string exceptionMessage)
+    {
+        if (condition)
+        {
+            throw new InternalServerErrorException(exceptionMessage);
+        }
+    }
+
+    public static void ThrowIfNullOrNegative([NotNull] decimal? value, string exceptionMessage)
+    {
+        if (value is < 0 or null)
+        {
+            throw new InternalServerErrorException(exceptionMessage);
         }
     }
 }

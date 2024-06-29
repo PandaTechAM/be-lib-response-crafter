@@ -10,6 +10,11 @@ public class Controller : ControllerBase
     [HttpGet("/error-by-exception-controller")]
     public IActionResult ErrorByException()
     {
+        string? vazgen = null;
+        
+        NotFoundException.ThrowIfNull(vazgen);
+
+        string vazgen2 = vazgen;
         throw new BadRequestException("some_exception");
     }
 
