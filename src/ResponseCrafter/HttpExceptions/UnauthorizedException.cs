@@ -14,11 +14,27 @@ public class UnauthorizedException(string message = UnauthorizedException.Defaul
         }
     }
 
+    public static void ThrowIfNull([NotNull] object? value)
+    {
+        if (value is null)
+        {
+            throw new UnauthorizedException();
+        }
+    }
+
     public static void ThrowIfNullOrWhiteSpace([NotNull] string? value, string exceptionMessage)
     {
         if (string.IsNullOrWhiteSpace(value))
         {
             throw new UnauthorizedException(exceptionMessage);
+        }
+    }
+    
+    public static void ThrowIfNullOrWhiteSpace([NotNull] string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            throw new UnauthorizedException();
         }
     }
 
@@ -29,6 +45,14 @@ public class UnauthorizedException(string message = UnauthorizedException.Defaul
             throw new UnauthorizedException(exceptionMessage);
         }
     }
+    
+    public static void ThrowIfNullOrWhiteSpace([NotNull] List<string?>? values)
+    {
+        if (values is null || values.Count == 0 || values.Any(string.IsNullOrWhiteSpace))
+        {
+            throw new UnauthorizedException();
+        }
+    }
 
     public static void ThrowIf(bool condition, string exceptionMessage)
     {
@@ -37,12 +61,28 @@ public class UnauthorizedException(string message = UnauthorizedException.Defaul
             throw new UnauthorizedException(exceptionMessage);
         }
     }
+    
+    public static void ThrowIf(bool condition)
+    {
+        if (condition)
+        {
+            throw new UnauthorizedException();
+        }
+    }
 
     public static void ThrowIfNullOrNegative([NotNull] decimal? value, string exceptionMessage)
     {
         if (value is < 0 or null)
         {
             throw new UnauthorizedException(exceptionMessage);
+        }
+    }
+    
+    public static void ThrowIfNullOrNegative([NotNull] decimal? value)
+    {
+        if (value is < 0 or null)
+        {
+            throw new UnauthorizedException();
         }
     }
 }
