@@ -8,13 +8,13 @@
         <Copyright>MIT</Copyright>
         <PackageIcon>pandatech.png</PackageIcon>
         <PackageReadmeFile>Readme.md</PackageReadmeFile>
-        <Version>2.2.1</Version>
+        <Version>2.2.2</Version>
         <PackageId>Pandatech.ResponseCrafter</PackageId>
         <PackageTags>Pandatech, library, exception handler, exception, middleware, Api response</PackageTags>
         <Title>ResponseCrafter</Title>
         <Description>Handling exceptions, custom Dtos.</Description>
         <RepositoryUrl>https://github.com/PandaTechAM/be-lib-response-crafter</RepositoryUrl>
-        <PackageReleaseNotes>Exception extension compiler enhancment and new features has been added</PackageReleaseNotes>
+        <PackageReleaseNotes>Exception extension overloads added</PackageReleaseNotes>
     </PropertyGroup>
 
     <ItemGroup>

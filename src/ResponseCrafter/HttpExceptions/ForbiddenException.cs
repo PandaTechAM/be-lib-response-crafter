@@ -14,11 +14,27 @@ public class ForbiddenException(string message = ForbiddenException.DefaultMessa
         }
     }
 
+    public static void ThrowIfNull([NotNull] object? value)
+    {
+        if (value is null)
+        {
+            throw new ForbiddenException();
+        }
+    }
+
     public static void ThrowIfNullOrWhiteSpace([NotNull] string? value, string exceptionMessage)
     {
         if (string.IsNullOrWhiteSpace(value))
         {
             throw new ForbiddenException(exceptionMessage);
+        }
+    }
+    
+    public static void ThrowIfNullOrWhiteSpace([NotNull] string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            throw new ForbiddenException();
         }
     }
 
@@ -29,6 +45,14 @@ public class ForbiddenException(string message = ForbiddenException.DefaultMessa
             throw new ForbiddenException(exceptionMessage);
         }
     }
+    
+    public static void ThrowIfNullOrWhiteSpace([NotNull] List<string?>? values)
+    {
+        if (values is null || values.Count == 0 || values.Any(string.IsNullOrWhiteSpace))
+        {
+            throw new ForbiddenException();
+        }
+    }
 
     public static void ThrowIf(bool condition, string exceptionMessage)
     {
@@ -37,12 +61,28 @@ public class ForbiddenException(string message = ForbiddenException.DefaultMessa
             throw new ForbiddenException(exceptionMessage);
         }
     }
+    
+    public static void ThrowIf(bool condition)
+    {
+        if (condition)
+        {
+            throw new ForbiddenException();
+        }
+    }
 
     public static void ThrowIfNullOrNegative([NotNull] decimal? value, string exceptionMessage)
     {
         if (value is < 0 or null)
         {
             throw new ForbiddenException(exceptionMessage);
+        }
+    }
+    
+    public static void ThrowIfNullOrNegative([NotNull] decimal? value)
+    {
+        if (value is < 0 or null)
+        {
+            throw new ForbiddenException();
         }
     }
 }
