@@ -1,5 +1,4 @@
-﻿using BaseConverter.Exceptions;
-using FluentImporter.Exceptions;
+﻿using FluentImporter.Exceptions;
 using GridifyExtensions.Exceptions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
@@ -49,9 +48,6 @@ public class PandaExceptionHandler : IExceptionHandler
             case DbUpdateConcurrencyException:
                 await HandleDbConcurrencyExceptionAsync(httpContext, cancellationToken);
                 break;
-            case BaseConverterException targetInvocationException:
-                await HandleBaseConverterExceptionAsync(httpContext, targetInvocationException, cancellationToken);
-                break;
             case ImportException targetInvocationException:
                 await HandleImportExceptionAsync(httpContext, targetInvocationException, cancellationToken);
                 break;
@@ -80,23 +76,7 @@ public class PandaExceptionHandler : IExceptionHandler
             new ConflictException(ConcurrencyMessage.ConvertCase(_convention));
         await HandleApiExceptionAsync(httpContext, exception, cancellationToken);
     }
-
-    private async Task HandleBaseConverterExceptionAsync(HttpContext httpContext,
-        BaseConverterException importException,
-        CancellationToken cancellationToken)
-    {
-        switch (importException)
-        {
-            case InputValidationException _:
-            case UnsupportedCharacterException _:
-                var mappedException = new BadRequestException(importException.Message.ConvertCase(_convention));
-                await HandleApiExceptionAsync(httpContext, mappedException, cancellationToken);
-                break;
-            default:
-                await HandleGeneralExceptionAsync(httpContext, importException, cancellationToken);
-                break;
-        }
-    }
+   
 
     private async Task HandleImportExceptionAsync(HttpContext httpContext, ImportException importException,
         CancellationToken cancellationToken)

@@ -1,4 +1,5 @@
-﻿using System.Diagnostics.CodeAnalysis;
+﻿using System.Collections;
+using System.Diagnostics.CodeAnalysis;
 
 namespace ResponseCrafter.HttpExceptions;
 
@@ -21,6 +22,26 @@ public class UnauthorizedException(string message = UnauthorizedException.Defaul
             throw new UnauthorizedException();
         }
     }
+    
+    public static void ThrowIfNullOrEmpty([NotNull] IEnumerable? value)
+    {
+       // ReSharper disable once GenericEnumeratorNotDisposed
+       if (value is null || !value.GetEnumerator()
+                                  .MoveNext())
+       {
+          throw new UnauthorizedException();
+       }
+    }
+   
+    public static void ThrowIfNullOrEmpty([NotNull] IEnumerable? value, string exceptionMessage)
+    {
+       // ReSharper disable once GenericEnumeratorNotDisposed
+       if (value is null || !value.GetEnumerator()
+                                  .MoveNext())
+       {
+          throw new UnauthorizedException(exceptionMessage);
+       }
+    }
 
     public static void ThrowIfNullOrWhiteSpace([NotNull] string? value, string exceptionMessage)
     {
@@ -37,22 +58,7 @@ public class UnauthorizedException(string message = UnauthorizedException.Defaul
             throw new UnauthorizedException();
         }
     }
-
-    public static void ThrowIfNullOrWhiteSpace([NotNull] List<string?>? values, string exceptionMessage)
-    {
-        if (values is null || values.Count == 0 || values.Any(string.IsNullOrWhiteSpace))
-        {
-            throw new UnauthorizedException(exceptionMessage);
-        }
-    }
     
-    public static void ThrowIfNullOrWhiteSpace([NotNull] List<string?>? values)
-    {
-        if (values is null || values.Count == 0 || values.Any(string.IsNullOrWhiteSpace))
-        {
-            throw new UnauthorizedException();
-        }
-    }
 
     public static void ThrowIf(bool condition, string exceptionMessage)
     {
