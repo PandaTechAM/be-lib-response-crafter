@@ -138,13 +138,13 @@ NotFoundException.ThrowIfNullOrWhiteSpace(username);
 //For 500 Internal Server Error
 InternalServerErrorException.ThrowIfNullOrWhiteSpace(username, "Price is negative");
 
-List<string?>? tags = new List<string?> { "tag1", " ", null };
+List<int> tags = [];
 //For 400 Bad Request
-BadRequestException.ThrowIfNullOrWhiteSpace(tags);
+BadRequestException.ThrowIfNullOrEmpty(tags, "Please provide tags");
 //For 404 Not Found
-NotFoundException.ThrowIfNullOrWhiteSpace(tags);
+NotFoundException.ThrowIfNullOrEmpty(tags);
 //For 500 Internal Server Error
-InternalServerErrorException.ThrowIfNullOrWhiteSpace(tags);
+InternalServerErrorException.ThrowIfNullOrEmpty(tags, "Please provide tags");
 
 object? user = null;
 //For 400 Bad Request
@@ -161,7 +161,7 @@ UnauthorizedException.ThrowIf(userUnauthorized, "User is unauthorized");
 InternalServerErrorException.ThrowIf(userUnauthorized, "User is unauthorized");
 ```
 
-These examples show how to use the `ThrowIfNullOrNegative`, `ThrowIfNullOrWhiteSpace`, and `ThrowIfNull` helper methods
+These examples show how to use the `ThrowIfNullOrNegative`, `ThrowIfNullOrWhiteSpace`, `ThrowIfNullOrEmpty` and `ThrowIfNull` helper methods
 from `BadRequestException`, `InternalServerErrorException` and `NotFoundException`. Adjust the object names and values according to your specific
 application needs.
 

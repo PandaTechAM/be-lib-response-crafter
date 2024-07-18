@@ -1,4 +1,5 @@
-﻿using System.Diagnostics.CodeAnalysis;
+﻿using System.Collections;
+using System.Diagnostics.CodeAnalysis;
 
 namespace ResponseCrafter.HttpExceptions;
 
@@ -21,6 +22,26 @@ public class ForbiddenException(string message = ForbiddenException.DefaultMessa
             throw new ForbiddenException();
         }
     }
+    
+    public static void ThrowIfNullOrEmpty([NotNull] IEnumerable? value)
+    {
+       // ReSharper disable once GenericEnumeratorNotDisposed
+       if (value is null || !value.GetEnumerator()
+                                  .MoveNext())
+       {
+          throw new ForbiddenException();
+       }
+    }
+   
+    public static void ThrowIfNullOrEmpty([NotNull] IEnumerable? value, string exceptionMessage)
+    {
+       // ReSharper disable once GenericEnumeratorNotDisposed
+       if (value is null || !value.GetEnumerator()
+                                  .MoveNext())
+       {
+          throw new ForbiddenException(exceptionMessage);
+       }
+    }
 
     public static void ThrowIfNullOrWhiteSpace([NotNull] string? value, string exceptionMessage)
     {
@@ -33,22 +54,6 @@ public class ForbiddenException(string message = ForbiddenException.DefaultMessa
     public static void ThrowIfNullOrWhiteSpace([NotNull] string? value)
     {
         if (string.IsNullOrWhiteSpace(value))
-        {
-            throw new ForbiddenException();
-        }
-    }
-
-    public static void ThrowIfNullOrWhiteSpace([NotNull] List<string?>? values, string exceptionMessage)
-    {
-        if (values is null || values.Count == 0 || values.Any(string.IsNullOrWhiteSpace))
-        {
-            throw new ForbiddenException(exceptionMessage);
-        }
-    }
-    
-    public static void ThrowIfNullOrWhiteSpace([NotNull] List<string?>? values)
-    {
-        if (values is null || values.Count == 0 || values.Any(string.IsNullOrWhiteSpace))
         {
             throw new ForbiddenException();
         }
