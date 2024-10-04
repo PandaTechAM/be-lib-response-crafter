@@ -11,7 +11,7 @@ public static class WebApplicationExtensions
         NamingConvention namingConvention = NamingConvention.Default)
     {
         builder.Services.AddSingleton(new NamingConventionOptions { NamingConvention = namingConvention });
-        builder.Services.AddExceptionHandler<PandaExceptionHandler>();
+        builder.Services.AddExceptionHandler<ApiExceptionHandler>();
 
 
         return builder;

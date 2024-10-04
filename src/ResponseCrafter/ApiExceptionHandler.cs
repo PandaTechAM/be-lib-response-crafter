@@ -15,9 +15,9 @@ using IExceptionHandler = Microsoft.AspNetCore.Diagnostics.IExceptionHandler;
 
 namespace ResponseCrafter;
 
-public class PandaExceptionHandler : IExceptionHandler
+public class ApiExceptionHandler : IExceptionHandler
 {
-    private readonly ILogger<PandaExceptionHandler> _logger;
+    private readonly ILogger<ApiExceptionHandler> _logger;
     private readonly NamingConvention _convention;
     private readonly string _visibility;
     private const string DefaultMessage = "something_went_wrong_please_try_again_later_and_or_contact_it_support";
@@ -25,7 +25,7 @@ public class PandaExceptionHandler : IExceptionHandler
     private const string ConcurrencyMessage =
         "a_concurrency_conflict_occurred._please_reload_the_resource_and_try_you_update_again";
 
-    public PandaExceptionHandler(ILogger<PandaExceptionHandler> logger, IConfiguration configuration,
+    public ApiExceptionHandler(ILogger<ApiExceptionHandler> logger, IConfiguration configuration,
         NamingConventionOptions convention)
     {
         _logger = logger;
@@ -169,7 +169,7 @@ public class PandaExceptionHandler : IExceptionHandler
     private async Task HandleGeneralExceptionAsync(HttpContext httpContext, Exception exception,
         CancellationToken cancellationToken)
     {
-        var verboseMessage = CreateVerboseExceptionMessage(exception);
+        var verboseMessage = exception.CreateVerboseExceptionMessage();
 
         var response = new ErrorResponse
         {

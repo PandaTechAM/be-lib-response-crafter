@@ -1,9 +1,10 @@
 using Humanizer;
 using Microsoft.AspNetCore.Mvc;
-using ResponseCrafter.Demo;
+using Microsoft.AspNetCore.SignalR;
+using ResponseCrafter;
+using ResponseCrafter.Demo.Hubs;
 using ResponseCrafter.Enums;
 using ResponseCrafter.Extensions;
-using ResponseCrafter.HttpExceptions;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -11,43 +12,19 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.AddResponseCrafter(NamingConvention.ToSnakeCase);
 
+builder.Services.AddSignalR(o => o.AddFilter<SignalRExceptionFilter>());
+
 builder.Services.AddControllers();
 var app = builder.Build();
 app.UseSwagger();
 app.UseSwaggerUI();
 
+app.MapHub<ChatHub>("/chat-hub");
+
 
 app.UseResponseCrafter();
 
-var errors = new Dictionary<string, string>
-{
-   {
-      "some_error", "some_error_message"
-   },
-   {
-      "some_other_error", "some_other_error_message"
-   }
-};
 
-// Test naming convension
-app.MapGet("/error-by-exception-to-convert-minimal",
-      () =>
-      {
-         throw new BadRequestException("Some exception. Try again");
-      })
-   .ProducesErrorResponse(400, 401, 404);
-
-app.MapGet("/error-by-exception-minimal", _ => throw new BadRequestException("some_exception"));
-app.MapGet("/error-by-result-minimal", () => Results.BadRequest("some_exception"));
-
-
-app.MapGet("/token",
-   (HttpContext httpContext) =>
-   {
-      httpContext.SetToken("some_token");
-      throw new Exception();
-      // return httpContext.GetToken();
-   });
 
 app.MapPost("/humanizer",
    ([FromQuery] string input, [FromQuery] NamingConvention convention) =>
@@ -76,34 +53,9 @@ app.MapPost("/humanizer",
       return Results.Ok(input);
    });
 
-app.MapGet("/server-error", (Exception) => throw new Exception("some_unhandled_exception"));
-app.MapGet("/bad-request",
-   () =>
-   {
-      throw new BadRequestException(errors);
-   });
 
-app.MapGet("/test-enumerable",
-   () =>
-   {
-      List<Someeeee> something = [];
-
-      BadRequestException.ThrowIfNull(something, "some_error");
-
-      foreach (var s in something)
-      {
-         Console.WriteLine(s);
-      }
-
-      return Results.Ok();
-   });
 
 
 app.MapControllers();
 
 app.Run();
-
-public class Someeeee
-{
-   public int Some2 { get; set; }
-}

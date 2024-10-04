@@ -5,7 +5,7 @@ namespace ResponseCrafter.Helpers;
 
 public static class ExceptionMessageBuilder
 {
-    public static string CreateVerboseExceptionMessage(Exception exception)
+    public static string CreateVerboseExceptionMessage(this Exception exception)
     {
         var stringBuilder = new StringBuilder();
 
