@@ -3,13 +3,14 @@
 ## Introduction
 
 **Pandatech.ResponseCrafter** is a comprehensive NuGet package for .NET 8+, specifically designed to enhance exception
-handling and logging in ASP.NET Core applications. This package simplifies managing standard and custom exceptions by
-crafting detailed error responses suitable for both development and production environments.
+handling and logging in ASP.NET Core applications, and now extended to support SignalR hubs. This package simplifies
+managing standard and custom exceptions by crafting detailed error responses suitable for both development and
+production environments.
 
 ## Features
 
-* **Custom Exception Handling:** Streamlines the process of managing both standard HTTP exceptions and custom
-  exceptions.
+* **Custom Exception Handling:** Streamlines the process of managing both standard HTTP exceptions and custom exceptions
+  for both REST APIs and SignalR.
 * **Detailed Error Responses:** Generates verbose error messages, including stack traces for in-depth debugging in
   development environments.
 * **Environment-Sensitive Logging:** Provides flexible logging and response behavior based on visibility
@@ -20,8 +21,8 @@ crafting detailed error responses suitable for both development and production e
       message. Logging remains the same as in `Private`.
 * **Frontend-Friendly Error Messages:** Supports converting error messages to your desired case convention, facilitating
   easier integration with frontend localization systems.
-* **Standardized Error Responses:** Provides a standardized error response format, making it easier for frontend
-  applications to parse and display error messages. The error response format is shown below:
+* **Standardized Error Responses for REST and SignalR:** Provides a standardized error response format, making it easier
+  for frontend applications to parse and display error messages. The error response format for REST APIs is shown below:
 
 ```json
 {
@@ -35,7 +36,22 @@ crafting detailed error responses suitable for both development and production e
   },
   "Message": "the_request_was_invalid_or_cannot_be_otherwise_served."
 }
-````
+```
+
+For SignalR, the standard error response format is:
+
+```json
+{
+  "InvocationId": "0HMVFE0A0HMVFE0A284AMHMV00HMVFE0A284AM0A284AM",
+  "Instance": "SendMessage",
+  "StatusCode": 400,
+  "Errors": {
+    "email": "email_address_is_not_in_a_valid_format",
+    "password": "password_must_be_at_least_8_characters_long"
+  },
+  "Message": "the_request_was_invalid_or_cannot_be_otherwise_served."
+}
+```
 
 ## Installation
 
@@ -89,13 +105,38 @@ public enum NamingConvention
 }
 ```
 
-### 2. Define Custom Exceptions:
+### 2. Setup Exception Handling for SignalR:
+
+For SignalR support, register the exception filter for your hubs (or per hub) as follows:
+
+```csharp
+builder.Services.AddSignalR(options => options.AddFilter<SignalRExceptionFilter>());
+```
+
+If you already have the existing configuration for REST APIs, like
+`builder.AddResponseCrafter(NamingConvention.ToSnakeCase);`, SignalR messages will automatically use the same error
+handling and response crafting.
+
+### 3. Implement Hub Methods with Standard Arguments:
+
+To allow proper response handling, the hub methods should use the `HubArgument<T>` structure, which provides a unique
+invocation ID for tracing errors and crafting detailed responses.
+
+```csharp
+public async Task SendMessage(HubArgument<Message> hubArgument)
+{
+    throw new BadRequestException("This is a test exception");
+    await Clients.All.ReceiveMessage(hubArgument.Argument);
+}
+```
+
+### 4. Define Custom Exceptions:
 
 Create custom exception classes that inherit from `ApiException` or use the predefined ones. Use `ErrorDetails` records
 for
 specific error messages related to API requests.
 
-### 3. Configure Middleware:
+### 5. Configure Middleware:
 
 * Implement the exception handling middleware in your application's pipeline.
 
@@ -103,11 +144,41 @@ specific error messages related to API requests.
 app.UseResponseCrafter();
 ```
 
-### 4. Logging and Error Responses:
+## SignalR-Specific Error Handling and Structure
 
-The package automatically logs warnings or errors and provides crafted responses based on the exception type.
+When using the package with SignalR, the following structures are used for standardizing request and response handling:
+**HubErrorResponse**
+This class is used to format error responses sent back to the client:
 
-## Custom HTTP Exception Already Created
+```csharp
+public class HubErrorResponse
+{
+   public required string InvocationId { get; set; }
+   public required string Instance { get; set; }
+   public int StatusCode { get; set; }
+   public string Message { get; set; } = string.Empty;
+   public Dictionary<string, string>? Errors { get; set; }
+}
+```
+
+**HubArgument<T>**
+This class wraps around the standard arguments passed to SignalR methods, adding an `InvocationId` to enable unique
+error tracing.
+
+```csharp
+public class HubArgument<T>
+{
+   public required string InvocationId { get; set; }
+   public required T Argument { get; set; }
+}
+```
+
+## Logging and Error Responses:
+
+The package automatically logs warnings or errors and provides crafted responses based on the exception type, whether
+for REST APIs or SignalR hubs.
+
+## Predefined HTTP Exceptions
 
 * `BadRequestException`
 * `UnauthorizedException`
@@ -161,8 +232,10 @@ UnauthorizedException.ThrowIf(userUnauthorized, "User is unauthorized");
 InternalServerErrorException.ThrowIf(userUnauthorized, "User is unauthorized");
 ```
 
-These examples show how to use the `ThrowIfNullOrNegative`, `ThrowIfNullOrWhiteSpace`, `ThrowIfNullOrEmpty` and `ThrowIfNull` helper methods
-from `BadRequestException`, `InternalServerErrorException` and `NotFoundException`. Adjust the object names and values according to your specific
+These examples show how to use the `ThrowIfNullOrNegative`, `ThrowIfNullOrWhiteSpace`, `ThrowIfNullOrEmpty` and
+`ThrowIfNull` helper methods
+from `BadRequestException`, `InternalServerErrorException` and `NotFoundException`. Adjust the object names and values
+according to your specific
 application needs.
 
 ## Recommendations
