@@ -8,13 +8,13 @@
         <Copyright>MIT</Copyright>
         <PackageIcon>pandatech.png</PackageIcon>
         <PackageReadmeFile>Readme.md</PackageReadmeFile>
-        <Version>4.0.0</Version>
+        <Version>4.0.1</Version>
         <PackageId>Pandatech.ResponseCrafter</PackageId>
         <PackageTags>Pandatech, library, exception handler, exception, middleware, Api response</PackageTags>
         <Title>ResponseCrafter</Title>
         <Description>Handling exceptions, custom Dtos.</Description>
         <RepositoryUrl>https://github.com/PandaTechAM/be-lib-response-crafter</RepositoryUrl>
-        <PackageReleaseNotes>SignalR ResponseCrafting Support Has Been Added</PackageReleaseNotes>
+        <PackageReleaseNotes>TraceId now shows real traceId. Before it was requestId. For RequestId new property has been added.</PackageReleaseNotes>
     </PropertyGroup>
 
     <ItemGroup>
@@ -23,12 +23,12 @@
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="Humanizer" Version="2.14.1" />
-        <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="8.0.8" />
-        <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="8.0.8" />
-        <PackageReference Include="PandaTech.FluentImporter" Version="2.0.13" />
-        <PackageReference Include="Pandatech.GridifyExtensions" Version="1.6.2" />
-        <PackageReference Include="PandaTech.ServiceResponse" Version="1.2.12" />
+        <PackageReference Include="Humanizer" Version="2.14.1"/>
+        <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="8.0.8"/>
+        <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="8.0.8"/>
+        <PackageReference Include="PandaTech.FluentImporter" Version="2.0.13"/>
+        <PackageReference Include="Pandatech.GridifyExtensions" Version="1.6.2"/>
+        <PackageReference Include="PandaTech.ServiceResponse" Version="1.2.12"/>
     </ItemGroup>
 
 </Project>

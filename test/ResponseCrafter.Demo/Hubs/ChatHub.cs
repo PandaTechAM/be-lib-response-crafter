@@ -22,5 +22,5 @@ public class ChatHub : Hub<IChatClient>
 public class Message
 {
    public required string User { get; set; }
-   public string Content { get; set; }
+   public required string Content { get; set; }
 }

@@ -5,6 +5,7 @@
 /// </summary>
 public class HubErrorResponse
 {
+   public required string TraceId { get; set; }
    public required string InvocationId { get; set; }
    public required string Instance { get; set; }
    public int StatusCode { get; set; }
