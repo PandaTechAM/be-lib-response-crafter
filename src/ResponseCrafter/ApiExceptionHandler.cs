@@ -1,4 +1,5 @@
-﻿using FluentImporter.Exceptions;
+﻿using System.Diagnostics;
+using FluentImporter.Exceptions;
 using GridifyExtensions.Exceptions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
@@ -144,7 +145,8 @@ public class ApiExceptionHandler : IExceptionHandler
     {
         var response = new ErrorResponse
         {
-            TraceId = httpContext.TraceIdentifier,
+            RequestId = httpContext.TraceIdentifier,
+            TraceId = Activity.Current?.RootId ?? "",
             Instance = CreateRequestPath(httpContext),
             StatusCode = exception.StatusCode,
             Type = exception.GetType().Name,
@@ -173,7 +175,8 @@ public class ApiExceptionHandler : IExceptionHandler
 
         var response = new ErrorResponse
         {
-            TraceId = httpContext.TraceIdentifier,
+            RequestId = httpContext.TraceIdentifier,
+            TraceId = Activity.Current?.RootId ?? "",
             Instance = CreateRequestPath(httpContext),
             StatusCode = 500,
             Type = "InternalServerError",

@@ -1,4 +1,5 @@
-﻿using GridifyExtensions.Exceptions;
+﻿using System.Diagnostics;
+using GridifyExtensions.Exceptions;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -96,11 +97,12 @@ public class SignalRExceptionFilter : IHubFilter
    {
       var response = new HubErrorResponse
       {
+         TraceId = Activity.Current?.RootId ?? "",
          InvocationId = invocationId,
          Instance = invocationContext.HubMethodName,
          StatusCode = exception.StatusCode,
          Message = exception.Message.ConvertCase(_convention),
-         Errors = exception.Errors
+         Errors = exception.Errors,
       };
    
       if (response.Errors is null || response.Errors.Count == 0)
@@ -124,6 +126,7 @@ public class SignalRExceptionFilter : IHubFilter
       
       var response = new HubErrorResponse
       {
+         TraceId = Activity.Current?.RootId ?? "",
          InvocationId = invocationId,
          Instance = invocationContext.HubMethodName,
          StatusCode = 500,

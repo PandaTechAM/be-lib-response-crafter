@@ -2,10 +2,11 @@
 
 public class ErrorResponse
 {
-    public string TraceId { get; set; } = null!;
-    public string Instance { get; set; } = null!;
-    public int StatusCode { get; set; }
-    public string Type { get; set; } = null!;
-    public Dictionary<string, string>? Errors { get; set; }
-    public string Message { get; set; } = null!;
+   public required string RequestId { get; set; }
+   public required string TraceId { get; set; }
+   public required string Instance { get; set; }
+   public int StatusCode { get; init; }
+   public required string Type { get; set; }
+   public Dictionary<string, string>? Errors { get; set; }
+   public required string Message { get; set; }
 }

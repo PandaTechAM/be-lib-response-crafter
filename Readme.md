@@ -5,7 +5,7 @@
 **Pandatech.ResponseCrafter** is a comprehensive NuGet package for .NET 8+, specifically designed to enhance exception
 handling and logging in ASP.NET Core applications, and now extended to support SignalR hubs. This package simplifies
 managing standard and custom exceptions by crafting detailed error responses suitable for both development and
-production environments.
+production environments. It inherits all RFC 9457 Problem Details for HTTP APIs and even extends it.
 
 ## Features
 
@@ -26,15 +26,16 @@ production environments.
 
 ```json
 {
-  "TraceId": "0HMVFE0A284AM:00000001",
-  "Instance": "POST - 164.54.144.23:443/users/register",
-  "StatusCode": 400,
-  "Type": "BadRequestException",
-  "Errors": {
-    "email": "email_address_is_not_in_a_valid_format",
-    "password": "password_must_be_at_least_8_characters_long"
-  },
-  "Message": "the_request_was_invalid_or_cannot_be_otherwise_served."
+    "RequestId": "0HMVFE0A284AM:00000001",
+    "TraceId": "a55582ab204162e66e124b0378776ab7",
+    "Instance": "POST - 164.54.144.23:443/users/register",
+    "StatusCode": 400,
+    "Type": "BadRequestException",
+    "Errors": {
+        "email": "email_address_is_not_in_a_valid_format",
+        "password": "password_must_be_at_least_8_characters_long"
+    },
+    "Message": "the_request_was_invalid_or_cannot_be_otherwise_served."
 }
 ```
 
@@ -42,14 +43,15 @@ For SignalR, the standard error response format is:
 
 ```json
 {
-  "InvocationId": "0HMVFE0A0HMVFE0A284AMHMV00HMVFE0A284AM0A284AM",
-  "Instance": "SendMessage",
-  "StatusCode": 400,
-  "Errors": {
-    "email": "email_address_is_not_in_a_valid_format",
-    "password": "password_must_be_at_least_8_characters_long"
-  },
-  "Message": "the_request_was_invalid_or_cannot_be_otherwise_served."
+    "TraceId": "a55582ab204162e66e124b0378776ab7",
+    "InvocationId": "0HMVFE0A0HMVFE0A284AMHMV00HMVFE0A284AM0A284AM",
+    "Instance": "SendMessage",
+    "StatusCode": 400,
+    "Errors": {
+        "email": "email_address_is_not_in_a_valid_format",
+        "password": "password_must_be_at_least_8_characters_long"
+    },
+    "Message": "the_request_was_invalid_or_cannot_be_otherwise_served."
 }
 ```
 
@@ -86,7 +88,7 @@ Configure visibility in your `appsettings.json`:
 
 ```json
 {
-  "ResponseCrafterVisibility": "Public"
+    "ResponseCrafterVisibility": "Public"
 }
 ```
 
