@@ -1,7 +1,7 @@
 ﻿namespace ResponseCrafter.Helpers;
 
 /// <summary>
-/// Generic class representing the hub method argument structure.
+///    Generic class representing the hub method argument structure.
 /// </summary>
 /// <typeparam name="T">Type of the main argument value.</typeparam>
 public class HubArgument<T>

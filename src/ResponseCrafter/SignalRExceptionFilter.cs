@@ -15,15 +15,17 @@ namespace ResponseCrafter;
 
 public class SignalRExceptionFilter : IHubFilter
 {
-   private readonly ILogger<SignalRExceptionFilter> _logger;
-   private readonly NamingConvention _convention;
-   private readonly string _visibility;
    private const string DefaultMessage = "something_went_wrong_please_try_again_later_and_or_contact_it_support";
 
    private const string ConcurrencyMessage =
       "a_concurrency_conflict_occurred._please_reload_the_resource_and_try_you_update_again";
-   
-   public SignalRExceptionFilter(ILogger<SignalRExceptionFilter> logger, IConfiguration configuration,
+
+   private readonly NamingConvention _convention;
+   private readonly ILogger<SignalRExceptionFilter> _logger;
+   private readonly string _visibility;
+
+   public SignalRExceptionFilter(ILogger<SignalRExceptionFilter> logger,
+      IConfiguration configuration,
       NamingConventionOptions convention)
    {
       _logger = logger;
@@ -31,14 +33,14 @@ public class SignalRExceptionFilter : IHubFilter
       _visibility = configuration["ResponseCrafterVisibility"]!;
 
 
-      if (string.IsNullOrWhiteSpace(_visibility) || _visibility != "Private" && _visibility != "Public")
+      if (string.IsNullOrWhiteSpace(_visibility) || (_visibility != "Private" && _visibility != "Public"))
       {
          _visibility = "Public";
          _logger.LogWarning("Visibility configuration was not available. Defaulted to 'Public'.");
       }
    }
-   
-   
+
+
    public async ValueTask<object?> InvokeMethodAsync(HubInvocationContext invocationContext,
       Func<HubInvocationContext, ValueTask<object?>> next)
    {
@@ -77,7 +79,8 @@ public class SignalRExceptionFilter : IHubFilter
       }
 
       var hubArgument = hubInvocationContext.HubMethodArguments[0];
-      var invocationIdProperty = hubArgument?.GetType().GetProperty("InvocationId");
+      var invocationIdProperty = hubArgument?.GetType()
+                                            .GetProperty("InvocationId");
 
       if (invocationIdProperty == null || invocationIdProperty.PropertyType != typeof(string))
       {
@@ -93,7 +96,9 @@ public class SignalRExceptionFilter : IHubFilter
       return invocationId;
    }
 
-   private async Task<HubErrorResponse> HandleApiExceptionAsync(HubInvocationContext invocationContext, ApiException exception, string invocationId)
+   private async Task<HubErrorResponse> HandleApiExceptionAsync(HubInvocationContext invocationContext,
+      ApiException exception,
+      string invocationId)
    {
       var response = new HubErrorResponse
       {
@@ -102,28 +107,31 @@ public class SignalRExceptionFilter : IHubFilter
          Instance = invocationContext.HubMethodName,
          StatusCode = exception.StatusCode,
          Message = exception.Message.ConvertCase(_convention),
-         Errors = exception.Errors,
+         Errors = exception.Errors
       };
-   
+
       if (response.Errors is null || response.Errors.Count == 0)
       {
          _logger.LogWarning("SignalR Exception Encountered: {Message}", response.Message);
       }
       else
       {
-         _logger.LogWarning("SignalR Exception Encountered: {Message} with errors: {@Errors}", response.Message,
+         _logger.LogWarning("SignalR Exception Encountered: {Message} with errors: {@Errors}",
+            response.Message,
             response.Errors);
       }
-      
+
       await invocationContext.Hub.Clients.Caller.SendAsync("ReceiveError", response);
 
       return response;
    }
 
-   private async Task<HubErrorResponse> HandleGeneralExceptionAsync(HubInvocationContext invocationContext, Exception exception, string invocationId)
+   private async Task<HubErrorResponse> HandleGeneralExceptionAsync(HubInvocationContext invocationContext,
+      Exception exception,
+      string invocationId)
    {
       var verboseMessage = exception.CreateVerboseExceptionMessage();
-      
+
       var response = new HubErrorResponse
       {
          TraceId = Activity.Current?.RootId ?? "",
@@ -137,12 +145,11 @@ public class SignalRExceptionFilter : IHubFilter
       {
          response.Message = verboseMessage.ConvertCase(_convention);
       }
-      
+
       _logger.LogError("Unhandled exception encountered: {Message}", verboseMessage);
- 
+
       await invocationContext.Hub.Clients.Caller.SendAsync("ReceiveError", response);
 
       return response;
    }
-   
 }
