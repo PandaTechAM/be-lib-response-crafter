@@ -1,20 +1,20 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFramework>net8.0</TargetFramework>
+        <TargetFramework>net9.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <Authors>Pandatech</Authors>
         <Copyright>MIT</Copyright>
         <PackageIcon>pandatech.png</PackageIcon>
         <PackageReadmeFile>Readme.md</PackageReadmeFile>
-        <Version>4.0.1</Version>
+        <Version>5.0.0</Version>
         <PackageId>Pandatech.ResponseCrafter</PackageId>
         <PackageTags>Pandatech, library, exception handler, exception, middleware, Api response</PackageTags>
         <Title>ResponseCrafter</Title>
         <Description>Handling exceptions, custom Dtos.</Description>
         <RepositoryUrl>https://github.com/PandaTechAM/be-lib-response-crafter</RepositoryUrl>
-        <PackageReleaseNotes>TraceId now shows real traceId. Before it was requestId. For RequestId new property has been added.</PackageReleaseNotes>
+        <PackageReleaseNotes>.Net 9 upgrade</PackageReleaseNotes>
     </PropertyGroup>
 
     <ItemGroup>
@@ -24,10 +24,10 @@
 
     <ItemGroup>
         <PackageReference Include="Humanizer" Version="2.14.1"/>
-        <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="8.0.8"/>
-        <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="8.0.8"/>
-        <PackageReference Include="PandaTech.FluentImporter" Version="2.0.13"/>
-        <PackageReference Include="Pandatech.GridifyExtensions" Version="1.6.2"/>
+        <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.0"/>
+        <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="9.0.0"/>
+        <PackageReference Include="PandaTech.FluentImporter" Version="3.0.0"/>
+        <PackageReference Include="Pandatech.GridifyExtensions" Version="2.0.0"/>
         <PackageReference Include="PandaTech.ServiceResponse" Version="1.2.12"/>
     </ItemGroup>
 

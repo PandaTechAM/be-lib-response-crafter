@@ -1,7 +1,7 @@
 ﻿namespace ResponseCrafter.Dtos;
 
 /// <summary>
-/// Represents a standard structure for error responses sent back to SignalR clients.
+///    Represents a standard structure for error responses sent back to SignalR clients.
 /// </summary>
 public class HubErrorResponse
 {

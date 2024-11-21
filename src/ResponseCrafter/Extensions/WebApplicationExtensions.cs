@@ -7,22 +7,25 @@ namespace ResponseCrafter.Extensions;
 
 public static class WebApplicationExtensions
 {
-    public static WebApplicationBuilder AddResponseCrafter(this WebApplicationBuilder builder,
-        NamingConvention namingConvention = NamingConvention.Default)
-    {
-        builder.Services.AddSingleton(new NamingConventionOptions { NamingConvention = namingConvention });
-        builder.Services.AddExceptionHandler<ApiExceptionHandler>();
+   public static WebApplicationBuilder AddResponseCrafter(this WebApplicationBuilder builder,
+      NamingConvention namingConvention = NamingConvention.Default)
+   {
+      builder.Services.AddSingleton(new NamingConventionOptions
+      {
+         NamingConvention = namingConvention
+      });
+      builder.Services.AddExceptionHandler<ApiExceptionHandler>();
 
 
-        return builder;
-    }
+      return builder;
+   }
 
-    public static WebApplication UseResponseCrafter(this WebApplication app)
-    {
-        app.UseExceptionHandler(_ =>
-        {
-        }); //the lambda parameter is not needed it is just .net 8 bug which might be fixed in the future
+   public static WebApplication UseResponseCrafter(this WebApplication app)
+   {
+      app.UseExceptionHandler(_ =>
+      {
+      }); //the lambda parameter is not needed it is just .net 8 bug which might be fixed in the future
 
-        return app;
-    }
+      return app;
+   }
 }

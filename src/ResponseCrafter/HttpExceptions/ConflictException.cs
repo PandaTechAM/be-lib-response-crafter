@@ -23,7 +23,7 @@ public class ConflictException(string message = ConflictException.DefaultMessage
          throw new ConflictException();
       }
    }
-   
+
    public static void ThrowIfNullOrEmpty([NotNull] IEnumerable? value)
    {
       // ReSharper disable once GenericEnumeratorNotDisposed
@@ -33,7 +33,7 @@ public class ConflictException(string message = ConflictException.DefaultMessage
          throw new ConflictException();
       }
    }
-   
+
    public static void ThrowIfNullOrEmpty([NotNull] IEnumerable? value, string exceptionMessage)
    {
       // ReSharper disable once GenericEnumeratorNotDisposed
