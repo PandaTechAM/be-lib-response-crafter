@@ -5,12 +5,12 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-using PandaTech.ServiceResponse;
 using ResponseCrafter.Dtos;
 using ResponseCrafter.Enums;
 using ResponseCrafter.Extensions;
 using ResponseCrafter.HttpExceptions;
 using ResponseCrafter.Options;
+using ServiceResponse.ExceptionHandler;
 using static ResponseCrafter.Helpers.ExceptionMessageBuilder;
 using IExceptionHandler = Microsoft.AspNetCore.Diagnostics.IExceptionHandler;
 
@@ -107,7 +107,7 @@ public class ApiExceptionHandler : IExceptionHandler
    {
       var originalMessage = serviceException.Message.ConvertCase(_convention);
 
-      var response = new ServiceResponse
+      var response = new ServiceResponse.ServiceResponse.ServiceResponse
       {
          Message = originalMessage,
          ResponseStatus = serviceException.ResponseStatus,
