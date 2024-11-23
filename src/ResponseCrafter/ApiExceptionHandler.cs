@@ -10,7 +10,8 @@ using ResponseCrafter.Enums;
 using ResponseCrafter.Extensions;
 using ResponseCrafter.HttpExceptions;
 using ResponseCrafter.Options;
-using ServiceResponse.ExceptionHandler;
+using ServiceResponseCrafter.Dtos;
+using ServiceResponseCrafter.ExceptionHandler;
 using static ResponseCrafter.Helpers.ExceptionMessageBuilder;
 using IExceptionHandler = Microsoft.AspNetCore.Diagnostics.IExceptionHandler;
 
@@ -107,7 +108,7 @@ public class ApiExceptionHandler : IExceptionHandler
    {
       var originalMessage = serviceException.Message.ConvertCase(_convention);
 
-      var response = new ServiceResponse.ServiceResponse.ServiceResponse
+      var response = new ServiceResponse
       {
          Message = originalMessage,
          ResponseStatus = serviceException.ResponseStatus,
