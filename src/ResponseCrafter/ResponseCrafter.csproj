@@ -8,7 +8,7 @@
         <Copyright>MIT</Copyright>
         <PackageIcon>pandatech.png</PackageIcon>
         <PackageReadmeFile>Readme.md</PackageReadmeFile>
-        <Version>5.0.1</Version>
+        <Version>5.0.2</Version>
         <PackageId>Pandatech.ResponseCrafter</PackageId>
         <PackageTags>Pandatech, library, exception handler, exception, middleware, Api response</PackageTags>
         <Title>ResponseCrafter</Title>
@@ -28,7 +28,7 @@
         <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="9.0.0"/>
         <PackageReference Include="PandaTech.FluentImporter" Version="3.0.0"/>
         <PackageReference Include="Pandatech.GridifyExtensions" Version="2.0.0"/>
-        <PackageReference Include="PandaTech.ServiceResponse" Version="2.0.0" />
+        <PackageReference Include="PandaTech.ServiceResponse" Version="2.0.2" />
     </ItemGroup>
 
 </Project>
