@@ -10,8 +10,6 @@ using ResponseCrafter.Enums;
 using ResponseCrafter.Extensions;
 using ResponseCrafter.HttpExceptions;
 using ResponseCrafter.Options;
-using ServiceResponseCrafter.Dtos;
-using ServiceResponseCrafter.ExceptionHandler;
 using static ResponseCrafter.Helpers.ExceptionMessageBuilder;
 using IExceptionHandler = Microsoft.AspNetCore.Diagnostics.IExceptionHandler;
 
@@ -56,9 +54,6 @@ public class ApiExceptionHandler : IExceptionHandler
          case ImportException targetInvocationException:
             await HandleImportExceptionAsync(httpContext, targetInvocationException, cancellationToken);
             break;
-         case ServiceException serviceException:
-            await HandleServiceExceptionAsync(httpContext, serviceException, cancellationToken);
-            break;
          case GridifyException gridifyException:
             await HandleGridifyExceptionAsync(httpContext, gridifyException, cancellationToken);
             break;
@@ -100,42 +95,6 @@ public class ApiExceptionHandler : IExceptionHandler
             await HandleGeneralExceptionAsync(httpContext, importException, cancellationToken);
             break;
       }
-   }
-
-   private async Task HandleServiceExceptionAsync(HttpContext httpContext,
-      ServiceException serviceException,
-      CancellationToken cancellationToken)
-   {
-      var originalMessage = serviceException.Message.ConvertCase(_convention);
-
-      var response = new ServiceResponse
-      {
-         Message = originalMessage,
-         ResponseStatus = serviceException.ResponseStatus,
-         Success = false
-      };
-
-      httpContext.Response.StatusCode = (int)serviceException.ResponseStatus;
-
-      if (_visibility == "Public")
-      {
-         if (httpContext.Response.StatusCode >= 500)
-         {
-            response.Message = DefaultMessage.ConvertCase(_convention);
-         }
-      }
-
-
-      if (httpContext.Response.StatusCode >= 500)
-      {
-         _logger.LogError("ServiceException encountered: {ExceptionMessage}", originalMessage);
-      }
-      else
-      {
-         _logger.LogWarning("ServiceException encountered: {ExceptionMessage}", originalMessage);
-      }
-
-      await httpContext.Response.WriteAsJsonAsync(response, cancellationToken);
    }
 
 
