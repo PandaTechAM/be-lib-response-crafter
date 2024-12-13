@@ -8,5 +8,6 @@ public enum NamingConvention
    ToCamelCase = 3,
    ToKebabCase = 4,
    ToTitleCase = 5,
-   ToHumanCase = 6
+   ToHumanCase = 6,
+   ToUpperSnakeCase = 7,
 }

@@ -77,7 +77,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.AddResponseCrafter();
 
 // Setup with a specific naming convention
-builder.AddResponseCrafter(NamingConvention.ToSnakeCase);
+builder.AddResponseCrafter(NamingConvention.ToUpperSnakeCase);
 
 var app = builder.Build();
 app.UseResponseCrafter();
@@ -103,7 +103,8 @@ public enum NamingConvention
     ToCamelCase = 3,
     ToKebabCase = 4,
     ToTitleCase = 5,
-    ToHumanCase = 6
+    ToHumanCase = 6,
+    ToUpperSnakeCase = 7
 }
 ```
 
