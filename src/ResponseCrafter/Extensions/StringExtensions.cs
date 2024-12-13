@@ -22,6 +22,8 @@ public static class StringExtensions
                                                 .Titleize(),
          NamingConvention.ToHumanCase => message.Underscore()
                                                 .Humanize(),
+         NamingConvention.ToUpperSnakeCase => message.Underscore()
+                                                     .ToUpper(),
          _ => message
       };
    }
