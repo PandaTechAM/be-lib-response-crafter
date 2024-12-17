@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 using ResponseCrafter.Enums;
+using ResponseCrafter.ExceptionHandlers.Http;
 using ResponseCrafter.Options;
 
 namespace ResponseCrafter.Extensions;
@@ -22,10 +23,7 @@ public static class WebApplicationExtensions
 
    public static WebApplication UseResponseCrafter(this WebApplication app)
    {
-      app.UseExceptionHandler(_ =>
-      {
-      }); //the lambda parameter is not needed it is just .net 8 bug which might be fixed in the future
-
+      app.UseExceptionHandler();
       return app;
    }
 }
