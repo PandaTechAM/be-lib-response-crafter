@@ -8,20 +8,16 @@ using Microsoft.Extensions.Logging;
 using ResponseCrafter.Dtos;
 using ResponseCrafter.Enums;
 using ResponseCrafter.Extensions;
+using ResponseCrafter.Helpers;
 using ResponseCrafter.HttpExceptions;
 using ResponseCrafter.Options;
 using static ResponseCrafter.Helpers.ExceptionMessageBuilder;
 using IExceptionHandler = Microsoft.AspNetCore.Diagnostics.IExceptionHandler;
 
-namespace ResponseCrafter;
+namespace ResponseCrafter.ExceptionHandlers.Http;
 
-public class ApiExceptionHandler : IExceptionHandler
+internal class ApiExceptionHandler : IExceptionHandler
 {
-   private const string DefaultMessage = "something_went_wrong_please_try_again_later_and_or_contact_it_support";
-
-   private const string ConcurrencyMessage =
-      "a_concurrency_conflict_occurred._please_reload_the_resource_and_try_you_update_again";
-
    private readonly NamingConvention _convention;
    private readonly ILogger<ApiExceptionHandler> _logger;
    private readonly string _visibility;
@@ -32,14 +28,7 @@ public class ApiExceptionHandler : IExceptionHandler
    {
       _logger = logger;
       _convention = convention.NamingConvention;
-      _visibility = configuration["ResponseCrafterVisibility"]!;
-
-
-      if (string.IsNullOrWhiteSpace(_visibility) || (_visibility != "Private" && _visibility != "Public"))
-      {
-         _visibility = "Public";
-         _logger.LogWarning("Visibility configuration was not available. Defaulted to 'Public'.");
-      }
+      _visibility = configuration.GetResponseCrafterVisibility(_logger);
    }
 
    public async ValueTask<bool> TryHandleAsync(HttpContext httpContext,
@@ -73,7 +62,7 @@ public class ApiExceptionHandler : IExceptionHandler
    private async Task HandleDbConcurrencyExceptionAsync(HttpContext httpContext, CancellationToken cancellationToken)
    {
       var exception =
-         new ConflictException(ConcurrencyMessage.ConvertCase(_convention));
+         new ConflictException(ExceptionMessages.ConcurrencyMessage.ConvertCase(_convention));
       await HandleApiExceptionAsync(httpContext, exception, cancellationToken);
    }
 
@@ -150,7 +139,7 @@ public class ApiExceptionHandler : IExceptionHandler
          Instance = CreateRequestPath(httpContext),
          StatusCode = 500,
          Type = "InternalServerError",
-         Message = DefaultMessage.ConvertCase(_convention)
+         Message = ExceptionMessages.DefaultMessage.ConvertCase(_convention)
       };
 
       if (_visibility == "Private")

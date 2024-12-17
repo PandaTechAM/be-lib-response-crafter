@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.SignalR;
 using ResponseCrafter;
 using ResponseCrafter.Demo.Hubs;
 using ResponseCrafter.Enums;
+using ResponseCrafter.ExceptionHandlers.SignalR;
 using ResponseCrafter.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);

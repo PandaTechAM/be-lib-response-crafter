@@ -11,15 +11,10 @@ using ResponseCrafter.Helpers;
 using ResponseCrafter.HttpExceptions;
 using ResponseCrafter.Options;
 
-namespace ResponseCrafter;
+namespace ResponseCrafter.ExceptionHandlers.SignalR;
 
 public class SignalRExceptionFilter : IHubFilter
 {
-   private const string DefaultMessage = "something_went_wrong_please_try_again_later_and_or_contact_it_support";
-
-   private const string ConcurrencyMessage =
-      "a_concurrency_conflict_occurred._please_reload_the_resource_and_try_you_update_again";
-
    private readonly NamingConvention _convention;
    private readonly ILogger<SignalRExceptionFilter> _logger;
    private readonly string _visibility;
@@ -30,14 +25,7 @@ public class SignalRExceptionFilter : IHubFilter
    {
       _logger = logger;
       _convention = convention.NamingConvention;
-      _visibility = configuration["ResponseCrafterVisibility"]!;
-
-
-      if (string.IsNullOrWhiteSpace(_visibility) || (_visibility != "Private" && _visibility != "Public"))
-      {
-         _visibility = "Public";
-         _logger.LogWarning("Visibility configuration was not available. Defaulted to 'Public'.");
-      }
+      _visibility = configuration.GetResponseCrafterVisibility(_logger);
    }
 
 
@@ -48,12 +36,12 @@ public class SignalRExceptionFilter : IHubFilter
 
       try
       {
-         invocationId = TryGetInvocationId(invocationContext);
+         invocationId = TryGetInvocationId<HubArgument>(invocationContext);
          return await next(invocationContext);
       }
       catch (DbUpdateConcurrencyException)
       {
-         var exception = new ConflictException(ConcurrencyMessage.ConvertCase(_convention));
+         var exception = new ConflictException(ExceptionMessages.ConcurrencyMessage.ConvertCase(_convention));
          return await HandleApiExceptionAsync(invocationContext, exception, invocationId);
       }
       catch (GridifyException ex)
@@ -71,23 +59,14 @@ public class SignalRExceptionFilter : IHubFilter
       }
    }
 
-   private static string TryGetInvocationId(HubInvocationContext hubInvocationContext)
+   private static string TryGetInvocationId<T>(HubInvocationContext hubInvocationContext) where T : IHubArgument
    {
-      if (hubInvocationContext.HubMethodArguments.Count != 1)
+      if (hubInvocationContext.HubMethodArguments is not [T hubArgument])
       {
          throw new BadRequestException("Invalid hub method arguments. Expected a single HubArgument<T> parameter.");
       }
 
-      var hubArgument = hubInvocationContext.HubMethodArguments[0];
-      var invocationIdProperty = hubArgument?.GetType()
-                                            .GetProperty("InvocationId");
-
-      if (invocationIdProperty == null || invocationIdProperty.PropertyType != typeof(string))
-      {
-         throw new BadRequestException("Invalid hub method argument. Missing 'InvocationId' property.");
-      }
-
-      var invocationId = invocationIdProperty.GetValue(hubArgument) as string;
+      var invocationId = hubArgument.InvocationId;
       if (string.IsNullOrWhiteSpace(invocationId))
       {
          throw new BadRequestException("Invocation ID cannot be null, empty, or whitespace.");
@@ -138,7 +117,7 @@ public class SignalRExceptionFilter : IHubFilter
          InvocationId = invocationId,
          Instance = invocationContext.HubMethodName,
          StatusCode = 500,
-         Message = DefaultMessage.ConvertCase(_convention)
+         Message = ExceptionMessages.DefaultMessage.ConvertCase(_convention)
       };
 
       if (_visibility == "Private")
