@@ -23,7 +23,9 @@ public static class WebApplicationExtensions
 
    public static WebApplication UseResponseCrafter(this WebApplication app)
    {
-      app.UseExceptionHandler();
+      app.UseExceptionHandler(_ =>
+      {
+      });
       return app;
    }
 }
