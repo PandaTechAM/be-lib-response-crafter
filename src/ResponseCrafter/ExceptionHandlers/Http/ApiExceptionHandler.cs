@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics;
 using FluentImporter.Exceptions;
+using Gridify;
 using GridifyExtensions.Exceptions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
@@ -45,6 +46,9 @@ internal class ApiExceptionHandler : IExceptionHandler
             break;
          case GridifyException gridifyException:
             await HandleGridifyExceptionAsync(httpContext, gridifyException, cancellationToken);
+            break;
+         case GridifyMapperException gridifyMapperException:
+            await HandleGridifyExceptionMapperAsync(httpContext, gridifyMapperException, cancellationToken);
             break;
 
          case ApiException apiException:
@@ -92,6 +96,14 @@ internal class ApiExceptionHandler : IExceptionHandler
       CancellationToken cancellationToken)
    {
       var exception = new BadRequestException(gridifyException.Message.ConvertCase(_convention));
+      await HandleApiExceptionAsync(httpContext, exception, cancellationToken);
+   }
+   
+   private async Task HandleGridifyExceptionMapperAsync(HttpContext httpContext,
+      GridifyMapperException gridifyMapperException,
+      CancellationToken cancellationToken)
+   {
+      var exception = new BadRequestException(gridifyMapperException.Message.ConvertCase(_convention));
       await HandleApiExceptionAsync(httpContext, exception, cancellationToken);
    }
 
