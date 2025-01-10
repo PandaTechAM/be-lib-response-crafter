@@ -50,6 +50,9 @@ internal class ApiExceptionHandler : IExceptionHandler
          case GridifyMapperException gridifyMapperException:
             await HandleGridifyExceptionMapperAsync(httpContext, gridifyMapperException, cancellationToken);
             break;
+         case BadHttpRequestException badHttpRequestException:
+            await HandleBadHttpRequestExceptionAsync(httpContext, badHttpRequestException, cancellationToken);
+            break;
 
          case ApiException apiException:
             await HandleApiExceptionAsync(httpContext, apiException, cancellationToken);
@@ -90,6 +93,22 @@ internal class ApiExceptionHandler : IExceptionHandler
       }
    }
 
+   private async Task HandleBadHttpRequestExceptionAsync(HttpContext httpContext,
+      BadHttpRequestException badHttpRequestException,
+      CancellationToken cancellationToken)
+   {
+      if (badHttpRequestException.InnerException is System.Text.Json.JsonException jsonEx
+          && jsonEx.Message.ToLower().Contains("missing required properties including"))
+      {
+         var exception = new BadRequestException(jsonEx.Message);
+         await HandleApiExceptionAsync(httpContext, exception, cancellationToken);
+      }
+      else
+      {
+         var exception = new BadRequestException("Bad request. Possibly malformed JSON");
+         await HandleApiExceptionAsync(httpContext, exception, cancellationToken);
+      }
+   }
 
    private async Task HandleGridifyExceptionAsync(HttpContext httpContext,
       GridifyException gridifyException,
