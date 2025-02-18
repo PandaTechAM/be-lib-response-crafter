@@ -1,5 +1,5 @@
 ﻿using Microsoft.AspNetCore.SignalR;
-using ResponseCrafter.Helpers;
+using ResponseCrafter.ExceptionHandlers.SignalR;
 using ResponseCrafter.HttpExceptions;
 
 namespace ResponseCrafter.Demo.Hubs;
@@ -12,15 +12,16 @@ public class ChatHub : Hub<IChatClient>
       await base.OnConnectedAsync();
    }
    
-   public async Task SendMessage(HubArgument<Message> hubArgument)
+   public async Task SendMessage(Message hubArgument)
    {
       throw new BadRequestException("This is a test exception");
-      await Clients.All.ReceiveMessage(hubArgument.Argument);
+      await Clients.All.ReceiveMessage(hubArgument.User);
    }
 }
 
-public class Message
+public class Message : IHubArgument
 {
    public required string User { get; set; }
    public required string Content { get; set; }
+   public required string InvocationId { get; set; }
 }
