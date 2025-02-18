@@ -36,7 +36,7 @@ public class SignalRExceptionFilter : IHubFilter
 
       try
       {
-         invocationId = TryGetInvocationId<HubArgument>(invocationContext);
+         invocationId = TryGetInvocationId<IHubArgument>(invocationContext);
          return await next(invocationContext);
       }
       catch (DbUpdateConcurrencyException)
@@ -63,7 +63,7 @@ public class SignalRExceptionFilter : IHubFilter
    {
       if (hubInvocationContext.HubMethodArguments is not [T hubArgument])
       {
-         throw new BadRequestException("Invalid hub method arguments. Expected a single HubArgument<T> parameter.");
+         throw new BadRequestException("Invalid hub method arguments. Request model does not implement IHubArgument interface.");
       }
 
       var invocationId = hubArgument.InvocationId;
