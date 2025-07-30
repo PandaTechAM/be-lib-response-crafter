@@ -8,7 +8,7 @@
         <Copyright>MIT</Copyright>
         <PackageIcon>pandatech.png</PackageIcon>
         <PackageReadmeFile>Readme.md</PackageReadmeFile>
-        <Version>5.1.10</Version>
+        <Version>5.1.11</Version>
         <PackageId>Pandatech.ResponseCrafter</PackageId>
         <PackageTags>Pandatech, library, exception handler, exception, middleware, Api response</PackageTags>
         <Title>ResponseCrafter</Title>
