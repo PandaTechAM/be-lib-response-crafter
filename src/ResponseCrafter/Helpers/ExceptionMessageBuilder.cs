@@ -20,9 +20,11 @@ public static class ExceptionMessageBuilder
       {
          stringBuilder.AppendLine("Inner Exception:");
          stringBuilder.AppendLine(innerException.Message);
+         
 
          stringBuilder.AppendLine("Inner Exception Stack Trace:");
          stringBuilder.AppendLine(innerException.StackTrace);
+         
 
          innerException = innerException.InnerException;
       }

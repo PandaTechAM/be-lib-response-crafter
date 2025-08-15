@@ -36,99 +36,146 @@ public class SignalRExceptionFilter : IHubFilter
 
       try
       {
-         invocationId = TryGetInvocationId<IHubArgument>(invocationContext);
+         invocationId = TryGetInvocationId(invocationContext);
          return await next(invocationContext);
       }
       catch (DbUpdateConcurrencyException)
       {
          var exception = new ConflictException(ExceptionMessages.ConcurrencyMessage.ConvertCase(_convention));
-         return await HandleApiExceptionAsync(invocationContext, exception, invocationId);
+         await HandleApiExceptionAsync(invocationContext, exception, invocationId);
+         return NullResultFor(invocationContext);
       }
       catch (GridifyException ex)
       {
          var exception = new BadRequestException(ex.Message.ConvertCase(_convention));
-         return await HandleApiExceptionAsync(invocationContext, exception, invocationId);
+         await HandleApiExceptionAsync(invocationContext, exception, invocationId);
+         return NullResultFor(invocationContext);
       }
       catch (ApiException ex)
       {
-         return await HandleApiExceptionAsync(invocationContext, ex, invocationId);
+         await HandleApiExceptionAsync(invocationContext, ex, invocationId);
+         return NullResultFor(invocationContext);
       }
       catch (Exception ex)
       {
-         return await HandleGeneralExceptionAsync(invocationContext, ex, invocationId);
+         await HandleGeneralExceptionAsync(invocationContext, ex, invocationId);
+         return NullResultFor(invocationContext);
       }
    }
 
-   private static string TryGetInvocationId<T>(HubInvocationContext hubInvocationContext) where T : IHubArgument
+   private static string TryGetInvocationId(HubInvocationContext ctx)
    {
-      if (hubInvocationContext.HubMethodArguments is not [T hubArgument])
+      // 1) Legacy behavior: exactly one arg that implements IHubArgument
+      if (ctx.HubMethodArguments is [IHubArgument single] &&
+          !string.IsNullOrWhiteSpace(single.InvocationId))
       {
-         throw new BadRequestException("Invalid hub method arguments. Request model does not implement IHubArgument interface.");
+         return single.InvocationId;
       }
 
-      var invocationId = hubArgument.InvocationId;
-      if (string.IsNullOrWhiteSpace(invocationId))
+      // 2) New tolerant path: scan all args for first valid IHubArgument
+      foreach (var arg in ctx.HubMethodArguments)
       {
-         throw new BadRequestException("Invocation ID cannot be null, empty, or whitespace.");
+         if (arg is IHubArgument ha && !string.IsNullOrWhiteSpace(ha.InvocationId))
+            return ha.InvocationId;
       }
 
-      return invocationId;
+      // 3) Optional non-breaking fallback: header/query (safe to keep off if you don’t want it)
+      var http = ctx.Context.GetHttpContext();
+      var id = http?.Request
+                   .Headers["x-invocation-id"]
+                   .FirstOrDefault()
+               ?? http?.Request
+                      .Query["invocation_id"]
+                      .FirstOrDefault();
+
+      return !string.IsNullOrWhiteSpace(id)
+         ? id
+         : throw new BadRequestException("Invocation ID cannot be null, empty, or whitespace.");
    }
 
-   private async Task<HubErrorResponse> HandleApiExceptionAsync(HubInvocationContext invocationContext,
-      ApiException exception,
+   private async Task HandleApiExceptionAsync(HubInvocationContext ctx,
+      ApiException ex,
       string invocationId)
    {
-      var response = new HubErrorResponse
-      {
-         TraceId = Activity.Current?.RootId ?? "",
-         InvocationId = invocationId,
-         Instance = invocationContext.HubMethodName,
-         StatusCode = exception.StatusCode,
-         Message = exception.Message.ConvertCase(_convention),
-         Errors = exception.Errors
-      };
+      var traceId = Activity.Current?.TraceId.ToString() ?? string.Empty;
 
-      if (response.Errors is null || response.Errors.Count == 0)
+      using (_logger.BeginScope(new Dictionary<string, object>
+             {
+                ["trace_id"] = traceId,
+                ["hub"] = ctx.Hub.GetType()
+                             .Name,
+                ["method"] = ctx.HubMethodName,
+                ["connection_id"] = ctx.Context.ConnectionId,
+                ["user_id"] = ctx.Context.UserIdentifier ?? "",
+                ["invocation_id"] = invocationId,
+                ["status_code"] = ex.StatusCode
+             }))
       {
-         _logger.LogWarning("SignalR Exception Encountered: {Message}", response.Message);
+         var response = new HubErrorResponse
+         {
+            TraceId = traceId,
+            InvocationId = invocationId,
+            Instance = ctx.HubMethodName,
+            StatusCode = ex.StatusCode,
+            Message = ex.Message.ConvertCase(_convention),
+            Errors = ex.Errors.ConvertCase(_convention)
+         };
+
+         if (response.Errors is null || response.Errors.Count == 0)
+         {
+            _logger.LogWarning("SignalR exception: {Message}", response.Message);
+         }
+         else
+         {
+            _logger.LogWarning("SignalR exception: {Message} with errors: {@Errors}",
+               response.Message,
+               response.Errors);
+         }
+
+         await ctx.Hub.Clients.Caller.SendAsync("ReceiveError", response, ctx.Context.ConnectionAborted);
       }
-      else
-      {
-         _logger.LogWarning("SignalR Exception Encountered: {Message} with errors: {@Errors}",
-            response.Message,
-            response.Errors);
-      }
-
-      await invocationContext.Hub.Clients.Caller.SendAsync("ReceiveError", response);
-
-      return response;
    }
 
-   private async Task<HubErrorResponse> HandleGeneralExceptionAsync(HubInvocationContext invocationContext,
-      Exception exception,
+   private async Task HandleGeneralExceptionAsync(HubInvocationContext ctx,
+      Exception ex,
       string invocationId)
    {
-      var verboseMessage = exception.CreateVerboseExceptionMessage();
+      var traceId = Activity.Current?.TraceId.ToString() ?? string.Empty;
+      var verbose = ex.CreateVerboseExceptionMessage();
 
-      var response = new HubErrorResponse
+      using (_logger.BeginScope(new Dictionary<string, object>
+             {
+                ["trace_id"] = traceId,
+                ["hub"] = ctx.Hub.GetType()
+                             .Name,
+                ["method"] = ctx.HubMethodName,
+                ["connection_id"] = ctx.Context.ConnectionId,
+                ["user_id"] = ctx.Context.UserIdentifier ?? "",
+                ["invocation_id"] = invocationId,
+                ["status_code"] = 500
+             }))
       {
-         TraceId = Activity.Current?.RootId ?? "",
-         InvocationId = invocationId,
-         Instance = invocationContext.HubMethodName,
-         StatusCode = 500,
-         Message = ExceptionMessages.DefaultMessage.ConvertCase(_convention)
-      };
+         var response = new HubErrorResponse
+         {
+            TraceId = traceId,
+            InvocationId = invocationId,
+            Instance = ctx.HubMethodName,
+            StatusCode = 500,
+            Message = _visibility == "Private"
+               ? verbose.ConvertCase(_convention)
+               : ExceptionMessages.DefaultMessage.ConvertCase(_convention)
+         };
 
-      if (_visibility == "Private")
-      {
-         response.Message = verboseMessage.ConvertCase(_convention);
+         _logger.LogError("Unhandled SignalR exception: {Message}", verbose);
+
+         await ctx.Hub.Clients.Caller.SendAsync("ReceiveError", response, ctx.Context.ConnectionAborted);
       }
+   }
 
-      _logger.LogError("Unhandled exception encountered: {Message}", verboseMessage);
-
-      await invocationContext.Hub.Clients.Caller.SendAsync("ReceiveError", response);
-
-      return response;
+   private static object? NullResultFor(HubInvocationContext _)
+   {
+      // For Task/void: no payload is emitted.
+      // For Task<T>/T: caller receives null once (plus ReceiveError event).
+      return null;
    }
 }

@@ -32,4 +32,16 @@ public static class StringExtensions
    {
       return message.ConvertCase(option.NamingConvention);
    }
+
+   public static Dictionary<string, string>? ConvertCase(this Dictionary<string, string>? errors,
+      NamingConvention namingConvention)
+   {
+      return errors?.ToDictionary(
+         kvp => kvp.Key.ConvertCase(namingConvention),
+         kvp => kvp.Value.ConvertCase(namingConvention));
+   }
+
+   internal static Dictionary<string, string>? ConvertCase(this Dictionary<string, string>? errors,
+      NamingConventionOptions option) =>
+      errors.ConvertCase(option.NamingConvention);
 }

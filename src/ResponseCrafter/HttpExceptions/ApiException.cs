@@ -6,5 +6,5 @@ public abstract class ApiException(
    Dictionary<string, string>? errors = null) : Exception(message)
 {
    public int StatusCode { get; private set; } = statusCode;
-   public Dictionary<string, string>? Errors { get; private set; } = errors;
+   public Dictionary<string, string>? Errors { get; internal set; } = errors;
 }

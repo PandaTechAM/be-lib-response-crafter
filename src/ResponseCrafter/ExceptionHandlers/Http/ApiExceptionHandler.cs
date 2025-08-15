@@ -1,4 +1,6 @@
 ﻿using System.Diagnostics;
+using System.Globalization;
+using System.Text.Json;
 using FluentImporter.Exceptions;
 using Gridify;
 using GridifyExtensions.Exceptions;
@@ -95,19 +97,41 @@ internal class ApiExceptionHandler : IExceptionHandler
 
    private async Task HandleBadHttpRequestExceptionAsync(HttpContext httpContext,
       BadHttpRequestException badHttpRequestException,
-      CancellationToken cancellationToken)
+      CancellationToken ct)
    {
-      if (badHttpRequestException.InnerException is System.Text.Json.JsonException jsonEx
-          && jsonEx.Message.ToLower().Contains("missing required properties including"))
+      if (badHttpRequestException.InnerException is JsonException je)
       {
-         var exception = new BadRequestException(jsonEx.Message);
-         await HandleApiExceptionAsync(httpContext, exception, cancellationToken);
+         var errors = new Dictionary<string, string>
+         {
+            ["path"] = (je.Path ?? "$").ConvertCase(_convention),
+            ["detail"] = "json_deserialization_failed".ConvertCase(_convention)
+         };
+
+         var posObj = typeof(JsonException).GetProperty(nameof(JsonException.BytePositionInLine))
+                                           ?.GetValue(je);
+         if (posObj is long pos and >= 0)
+         {
+            errors["byte_position"] = pos.ToString(CultureInfo.InvariantCulture);
+         }
+
+         var lineObj = typeof(JsonException).GetProperty(nameof(JsonException.LineNumber))
+                                            ?.GetValue(je);
+         if (lineObj is long line and >= 0)
+         {
+            errors["line_number"] = line.ToString(CultureInfo.InvariantCulture);
+         }
+
+         var ex = new BadRequestException("invalid_json_payload")
+         {
+            Errors = errors
+         };
+
+         await HandleApiExceptionAsync(httpContext, ex, ct);
+         return;
       }
-      else
-      {
-         var exception = new BadRequestException("Bad request. Possibly malformed JSON");
-         await HandleApiExceptionAsync(httpContext, exception, cancellationToken);
-      }
+
+      var generic = new BadRequestException("bad_request_possibly_malformed_json");
+      await HandleApiExceptionAsync(httpContext, generic, ct);
    }
 
    private async Task HandleGridifyExceptionAsync(HttpContext httpContext,
@@ -117,7 +141,7 @@ internal class ApiExceptionHandler : IExceptionHandler
       var exception = new BadRequestException(gridifyException.Message.ConvertCase(_convention));
       await HandleApiExceptionAsync(httpContext, exception, cancellationToken);
    }
-   
+
    private async Task HandleGridifyExceptionMapperAsync(HttpContext httpContext,
       GridifyMapperException gridifyMapperException,
       CancellationToken cancellationToken)
@@ -128,32 +152,46 @@ internal class ApiExceptionHandler : IExceptionHandler
 
    private async Task HandleApiExceptionAsync(HttpContext httpContext,
       ApiException exception,
-      CancellationToken cancellationToken)
+      CancellationToken ct)
    {
-      var response = new ErrorResponse
-      {
-         RequestId = httpContext.TraceIdentifier,
-         TraceId = Activity.Current?.RootId ?? "",
-         Instance = CreateRequestPath(httpContext),
-         StatusCode = exception.StatusCode,
-         Type = exception.GetType()
-                         .Name,
-         Errors = exception.Errors,
-         Message = exception.Message.ConvertCase(_convention)
-      };
+      var traceId = Activity.Current?.TraceId.ToString() ?? string.Empty;
+      var instance = CreateRequestPath(httpContext);
 
-      httpContext.Response.StatusCode = exception.StatusCode;
-      await httpContext.Response.WriteAsJsonAsync(response, cancellationToken);
+      using (_logger.BeginScope(new Dictionary<string, object>
+             {
+                ["trace_id"] = traceId,
+                ["request_id"] = httpContext.TraceIdentifier,
+                ["instance"] = instance,
+                ["http_method"] = httpContext.Request.Method,
+                ["path"] = httpContext.Request.Path.ToString(),
+                ["status_code"] = exception.StatusCode
+             }))
+      {
+         var response = new ErrorResponse
+         {
+            RequestId = httpContext.TraceIdentifier,
+            TraceId = traceId,
+            Instance = instance,
+            StatusCode = exception.StatusCode,
+            Type = exception.GetType()
+                            .Name,
+            Errors = exception.Errors.ConvertCase(_convention),
+            Message = exception.Message.ConvertCase(_convention)
+         };
 
-      if (response.Errors is null || response.Errors.Count == 0)
-      {
-         _logger.LogWarning("ApiException encountered: {Message}", response.Message);
-      }
-      else
-      {
-         _logger.LogWarning("ApiException encountered: {Message} with errors: {@Errors}",
-            response.Message,
-            response.Errors);
+         httpContext.Response.StatusCode = exception.StatusCode;
+         await httpContext.Response.WriteAsJsonAsync(response, ct);
+
+         if (response.Errors is null || response.Errors.Count == 0)
+         {
+            _logger.LogWarning("ApiException encountered: {Message}", response.Message);
+         }
+         else
+         {
+            _logger.LogWarning("ApiException encountered: {Message} with errors: {@Errors}",
+               response.Message,
+               response.Errors);
+         }
       }
    }
 
@@ -161,13 +199,15 @@ internal class ApiExceptionHandler : IExceptionHandler
       Exception exception,
       CancellationToken cancellationToken)
    {
+      var traceId = Activity.Current?.TraceId.ToString() ?? string.Empty;
+      var instance = CreateRequestPath(httpContext);
       var verboseMessage = exception.CreateVerboseExceptionMessage();
 
       var response = new ErrorResponse
       {
          RequestId = httpContext.TraceIdentifier,
-         TraceId = Activity.Current?.RootId ?? "",
-         Instance = CreateRequestPath(httpContext),
+         TraceId = traceId,
+         Instance = instance,
          StatusCode = 500,
          Type = "InternalServerError",
          Message = ExceptionMessages.DefaultMessage.ConvertCase(_convention)
@@ -181,9 +221,19 @@ internal class ApiExceptionHandler : IExceptionHandler
       }
 
       httpContext.Response.StatusCode = response.StatusCode;
-      await httpContext.Response.WriteAsJsonAsync(response, cancellationToken);
 
-
-      _logger.LogError("Unhandled exception encountered: {Message}", verboseMessage);
+      using (_logger.BeginScope(new Dictionary<string, object> // <-- scope before write (optional)
+             {
+                ["trace_id"] = traceId,
+                ["request_id"] = httpContext.TraceIdentifier,
+                ["instance"] = instance,
+                ["http_method"] = httpContext.Request.Method,
+                ["path"] = httpContext.Request.Path.ToString(),
+                ["status_code"] = 500
+             }))
+      {
+         await httpContext.Response.WriteAsJsonAsync(response, cancellationToken);
+         _logger.LogError("Unhandled exception encountered: {Message}", verboseMessage);
+      }
    }
 }

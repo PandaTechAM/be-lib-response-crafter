@@ -1,11 +1,11 @@
 using Humanizer;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
-using ResponseCrafter;
 using ResponseCrafter.Demo.Hubs;
 using ResponseCrafter.Enums;
 using ResponseCrafter.ExceptionHandlers.SignalR;
 using ResponseCrafter.Extensions;
+using ResponseCrafter.HttpExceptions;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -13,7 +13,17 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.AddResponseCrafter(NamingConvention.ToSnakeCase);
 
+
 builder.Services.AddSignalR(o => o.AddFilter<SignalRExceptionFilter>());
+
+// HTTP client for demo failures
+builder.Services.AddHttpClient("demo-http",
+   c =>
+   {
+      c.BaseAddress = new Uri("http://localhost:65535"); // guaranteed to refuse
+      c.Timeout = TimeSpan.FromSeconds(2);
+   });
+
 
 builder.Services.AddControllers();
 var app = builder.Build();
@@ -26,35 +36,38 @@ app.MapHub<ChatHub>("/chat-hub");
 app.UseResponseCrafter();
 
 
-
-app.MapPost("/humanizer",
-   ([FromQuery] string input, [FromQuery] NamingConvention convention) =>
+app.MapPost("/errors/bad-request",
+   () =>
    {
-      switch (convention)
-      {
-         case NamingConvention.ToSnakeCase:
-            return Results.Ok(input.Underscore());
-         case NamingConvention.ToKebabCase:
-            return Results.Ok(input.Underscore()
-                                   .Kebaberize());
-         case NamingConvention.ToCamelCase:
-            return Results.Ok(input.Underscore()
-                                   .Camelize());
-         case NamingConvention.ToPascalCase:
-            return Results.Ok(input.Underscore()
-                                   .Pascalize());
-         case NamingConvention.ToTitleCase:
-            return Results.Ok(input.Underscore()
-                                   .Titleize());
-         case NamingConvention.ToHumanCase:
-            return Results.Ok(input.Underscore()
-                                   .Humanize());
-      }
-
-      return Results.Ok(input);
+      throw new BadRequestException("invalid_payload",
+         new Dictionary<string, string>
+         {
+            ["email"] = "email_address_is_not_in_a_valid_format",
+            ["password"] = "password_must_be_at_least_8_characters_long"
+         });
    });
 
+app.MapPost("/errors/dotnet",
+   () =>
+   {
+      throw new InvalidOperationException("simulated_invalid_operation");
+   });
 
+app.MapPost("/errors/500",
+   () =>
+   {
+      throw new Exception("simulated_unhandled_exception");
+   });
+
+app.MapGet("/errors/httpclient",
+   async ([FromServices] IHttpClientFactory factory) =>
+   {
+      throw new BadRequestException("something wrong");
+      var http = factory.CreateClient("demo-http");
+      // Will throw HttpRequestException (connection refused) or TaskCanceledException on timeout
+      _ = await http.GetStringAsync("/");
+      return Results.Ok("should_not_reach_here");
+   });
 
 
 app.MapControllers();
