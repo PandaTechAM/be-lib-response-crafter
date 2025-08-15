@@ -11,11 +11,20 @@ public class ChatHub : Hub<IChatClient>
       await Clients.All.ReceiveMessage($"{Context.ConnectionId} joined the chat");
       await base.OnConnectedAsync();
    }
-   
-   public async Task SendMessage(Message hubArgument)
+
+   public Task SendMessage(Message hubArgument)
    {
-      throw new BadRequestException("This is a test exception");
-      await Clients.All.ReceiveMessage(hubArgument.User);
+      throw new BadRequestException("invalid_message_format",
+         new Dictionary<string, string>
+         {
+            ["content"] = "message_content_is_invalid"
+         });
+   }
+
+   // 4b) Plain .NET exception -> 500 path in SignalR filter
+   public Task Boom(Message hubArgument)
+   {
+      throw new InvalidOperationException("signalr_method_failed");
    }
 }
 

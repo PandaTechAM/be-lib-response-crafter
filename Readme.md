@@ -1,34 +1,109 @@
 # Pandatech.ResponseCrafter
 
-## Introduction
+A lightweight exception handling and logging package for ASP.NET Core (Minimal APIs with first-class **SignalR**
+support.  
+It standardizes server-side error handling and produces consistent, frontend-friendly error payloads with messages
+suitable for localization.
 
-**Pandatech.ResponseCrafter** is a comprehensive NuGet package for .NET 8+, specifically designed to enhance exception
-handling and logging in ASP.NET Core applications, and now extended to support SignalR hubs. This package simplifies
-managing standard and custom exceptions by crafting detailed error responses suitable for both development and
-production environments. It inherits all RFC 9457 Problem Details for HTTP APIs and even extends it.
+---
 
 ## Features
 
-* **Custom Exception Handling:** Streamlines the process of managing both standard HTTP exceptions and custom exceptions
-  for both REST APIs and SignalR.
-* **Detailed Error Responses:** Generates verbose error messages, including stack traces for in-depth debugging in
-  development environments.
-* **Environment-Sensitive Logging:** Provides flexible logging and response behavior based on visibility
-  settings (`Public` or `Private`):
-    - **Private:** All exceptions are sent to the client as defined, and 4xx errors are logged as warnings while 5xx
-      errors are logged as errors.
-    - **Public:** 4xx exceptions are sent to the client as defined, while 5xx errors are concealed with a generic
-      message. Logging remains the same as in `Private`.
-* **Frontend-Friendly Error Messages:** Supports converting error messages to your desired case convention, facilitating
-  easier integration with frontend localization systems.
-* **Standardized Error Responses for REST and SignalR:** Provides a standardized error response format, making it easier
-  for frontend applications to parse and display error messages. The error response format for REST APIs is shown below:
+- **Unified exception handling** for REST & SignalR (built on ASP.NET Core’s `IExceptionHandler` and SignalR
+  `IHubFilter`).
+- **Visibility modes** (`Public` / `Private`) to control how much detail is exposed in responses (e.g., hide 5xx details
+  in Public).
+- **Frontend-friendly messages** via configurable naming conventions (e.g., snake_case).
+- **Predefined HTTP exceptions** covering common 4xx/5xx cases + helpers (`ThrowIf...`) to reduce boilerplate.
+- **Consistent logging** with correlation IDs (`RequestId`, `TraceId`) and level split (4xx → warning, 5xx → error).
+- **SignalR** error envelope with `invocation_id` echo and `ReceiveError` channel.
+
+---
+
+## Installation
+
+Use either NuGet Package Manager or the CLI:
+
+```bash
+dotnet add package Pandatech.ResponseCrafter
+# or
+Install-Package Pandatech.ResponseCrafter
+```
+
+---
+
+## Quick Start (Minimal API)
+
+**program.cs**
+
+```csharp
+var builder = WebApplication.CreateBuilder(args);
+
+// 1) Register ResponseCrafter (optional naming convention)
+builder.AddResponseCrafter(NamingConvention.ToSnakeCase);
+
+// 2) Configure SignalR (optional). The filter applies package behavior to hubs.
+builder.Services.AddSignalR(options => options.AddFilter<SignalRExceptionFilter>());
+
+var app = builder.Build();
+
+// 3) Use ResponseCrafter middleware/exception handler
+app.UseResponseCrafter();
+
+app.MapGet("/ping", () => "pong");
+
+app.MapHub<ChatHub>("/hubs/chat");
+
+app.Run();
+```
+
+**appsettings.json**
+
+```json
+{
+    "ResponseCrafterVisibility": "Public"
+}
+```
+
+- **Public:** 4xx → detailed as defined; 5xx → generic message (no sensitive details).
+- **Private:** 4xx/5xx → expands with verbose diagnostics (where available).
+
+> **Note:** By default, `ResponseCrafter` suppresses the duplicate framework error log from
+`Microsoft.AspNetCore.Diagnostics.ExceptionHandlerMiddleware`.
+> If you prefer to keep that log, opt out:
+> ```csharp
+> builder.AddResponseCrafter(> NamingConvention.ToSnakeCase,> suppressExceptionHandlerMiddlewareLog: false);
+> ```
+
+```
+---
+
+## Supported HTTP Status Codes
+
+| Code | Description                                       |
+|:-----|:--------------------------------------------------|
+| 200  | Request succeeded.                                |
+| 202  | Request accepted (e.g. order enqueued).           |
+| 400  | Invalid request parameters or duplicate requests. |
+| 401  | Authentication failed.                            |
+| 403  | Insufficient permissions.                         |
+| 404  | Resource not found.                               |
+| 409  | Conflict (e.g. concurrency violation).            |
+| 429  | Too many requests.                                |
+| 500  | Server encountered an unexpected error.           |
+| 503  | Service unavailable.                              |
+
+---
+
+### REST (HTTP/JSON)
+
+**Content type:** `application/json`
 
 ```json
 {
     "RequestId": "0HMVFE0A284AM:00000001",
     "TraceId": "a55582ab204162e66e124b0378776ab7",
-    "Instance": "POST - 164.54.144.23:443/users/register",
+    "Instance": "POST - api.example.com:443/users/register",
     "StatusCode": 400,
     "Type": "BadRequestException",
     "Errors": {
@@ -39,7 +114,19 @@ production environments. It inherits all RFC 9457 Problem Details for HTTP APIs 
 }
 ```
 
-For SignalR, the standard error response format is:
+**Fields**
+
+- **RequestId** – ASP.NET Core `HttpContext.TraceIdentifier`.
+- **TraceId** – distributed trace id (W3C, e.g., `Activity.Current?.TraceId`).
+- **Instance** – contextual info (e.g., `METHOD - host:port/path`).
+- **StatusCode** – HTTP status code associated with the error.
+- **Type** – short descriptor (CLR exception name for API exceptions; `"InternalServerError"` for 5xx in Public).
+- **Errors** – `Dictionary<string, string>` of field-level messages.
+- **Message** – human- or key-like description.
+
+### SignalR (ReceiveError)
+
+Errors are sent to the calling client on **`ReceiveError`**.
 
 ```json
 {
@@ -55,36 +142,206 @@ For SignalR, the standard error response format is:
 }
 ```
 
-## Installation
+**Caller contract**
 
-Install the package via NuGet Package Manager or use the following command:
+- Include a non-empty **`InvocationId`** in hub calls (see `HubArgument<T>`).
+- The same `InvocationId` is echoed in errors to correlate requests/responses.
 
-```bash
-Install-Package ResponseCrafter
-```
+---
 
-## Usage
+## Naming Conventions
 
-### 1. Setup Exception Handlers:
-
-**Add** `AddResponseCrafter` in `program.cs` bby providing an optional naming convention, and
-configure `ResponseCrafterVisibility` in your settings.
+Use `NamingConvention` to transform messages (`Message` and `Errors` values).  
+**Recommendation:** `ToSnakeCase` or `ToUpperSnakeCase`.
 
 ```csharp
-var builder = WebApplication.CreateBuilder(args);
-
-// Basic setup
-builder.AddResponseCrafter();
-
-// Setup with a specific naming convention
-builder.AddResponseCrafter(NamingConvention.ToUpperSnakeCase);
-
-var app = builder.Build();
-app.UseResponseCrafter();
-app.Run();
+public enum NamingConvention
+{
+Default = 0,
+ToSnakeCase = 1,
+ToPascalCase = 2,
+ToCamelCase = 3,
+ToKebabCase = 4,
+ToTitleCase = 5,
+ToHumanCase = 6,
+ToUpperSnakeCase = 7
+}
 ```
 
-Configure visibility in your `appsettings.json`:
+---
+
+## Custom Exceptions
+
+Extend the base `ApiException` (package type) to create business-specific errors that serialize consistently.
+
+**Predefined exceptions:**
+
+- `BadRequestException`
+- `UnauthorizedException`
+- `PaymentRequiredException`
+- `ForbiddenException`
+- `NotFoundException`
+- `ConflictException`
+- `TooManyRequestsException`
+- `InternalServerErrorException`
+- `ServiceUnavailableException`
+
+**Example: create a custom domain exception**
+
+```csharp
+using ResponseCrafter.HttpExceptions;
+
+public sealed class OrderLimitExceededException : ApiException
+{
+public OrderLimitExceededException(string? message = null)
+: base(statusCode: 400, message ?? "order_limit_exceeded")
+{
+Errors = new() { ["limit"] = "maximum_daily_order_limit_reached" };
+}
+}
+```
+
+**Usage in an endpoint**
+
+```csharp
+app.MapPost("/orders", (CreateOrderRequest req) =>
+{
+if (req.Quantity > 100)
+throw new OrderLimitExceededException();
+
+// normal work...
+return Results.Accepted();
+});
+```
+
+---
+
+## Helper Methods (ThrowIf…)
+
+Use the built-in helper methods to reduce guard boilerplate.
+
+```csharp
+decimal? price = -10.5m;
+// 400 Bad Request
+BadRequestException.ThrowIfNullOrNegative(price, "price_is_negative");
+// 500 Internal Server Error
+InternalServerErrorException.ThrowIfNullOrNegative(price, "price_is_negative");
+
+string? username = "   ";
+// 400 Bad Request
+BadRequestException.ThrowIfNullOrWhiteSpace(username, "please_provide_username");
+// 404 Not Found
+NotFoundException.ThrowIfNullOrWhiteSpace(username);
+// 500 Internal Server Error
+InternalServerErrorException.ThrowIfNullOrWhiteSpace(username, "username_required");
+
+List<int> tags = [];
+// 400 Bad Request
+BadRequestException.ThrowIfNullOrEmpty(tags, "please_provide_tags");
+// 404 Not Found
+NotFoundException.ThrowIfNullOrEmpty(tags);
+// 500 Internal Server Error
+InternalServerErrorException.ThrowIfNullOrEmpty(tags, "tags_required");
+
+object? user = null;
+// 400 Bad Request
+BadRequestException.ThrowIfNull(user, "please_provide_user");
+// 404 Not Found
+NotFoundException.ThrowIfNull(user, "user_not_found");
+// 500 Internal Server Error
+InternalServerErrorException.ThrowIfNull(user, "user_required");
+
+bool userUnauthorized = false;
+// 401 Unauthorized
+UnauthorizedException.ThrowIf(userUnauthorized, "user_is_unauthorized");
+// 500 Internal Server Error
+InternalServerErrorException.ThrowIf(userUnauthorized, "authorization_check_failed");
+```
+
+---
+
+## SignalR Integration
+
+**Register the filter**
+
+```csharp
+builder.Services.AddSignalR(options => options.AddFilter<SignalRExceptionFilter>());
+```
+
+**Define the hub argument contract**
+
+```csharp
+public interface IHubArgument
+{
+    string InvocationId { get; set; }
+}
+
+public class HubArgument<T> : IHubArgument
+{
+    public required string InvocationId { get; set; }
+    public required T Argument { get; set; }
+}
+```
+
+**Hub method example**
+
+```csharp
+public class ChatHub : Hub
+{
+public async Task SendMessage(HubArgument<Message> hubArgument)
+{
+// Example: intentionally throwing to demonstrate an error path
+throw new BadRequestException("invalid_message_format");
+
+    // Normally:
+    // await Clients.All.SendAsync("ReceiveMessage", hubArgument.Argument);
+
+}
+}
+
+public class Message : IHubArgument
+{
+    public required string Message {get; set;}
+    public required string InvocationId { get; set; } 
+}
+```
+
+**Client expectation**
+
+- On error, server sends **`ReceiveError`** to the **caller** with the structure shown above.
+- `InvocationId` in the request is echoed back in the error.
+- Multi-argument hub methods are supported as long as at least one argument implements `IHubArgument` (
+  backward-compatible).
+
+---
+
+## Logging & Telemetry
+
+- **4xx** → logged as **Warning**
+- **5xx** → logged as **Error**
+- Correlate using **RequestId** (REST) / **InvocationId** (SignalR) and **TraceId** across services.
+- The package emits enough context for centralized log aggregation systems.
+
+> **Tip:** You can create logging scopes around `TraceId`/`RequestId` in your app if desired.
+
+---
+
+## Built-in Mappings & Behavior
+
+- `DbUpdateConcurrencyException` → **409 Conflict**
+- `BadHttpRequestException` → **400 Bad Request** with a stable “invalid payload” style message
+- `GridifyException` / `GridifyMapperException` → **400 Bad Request** with normalized messages
+
+**Unhandled exceptions**
+
+- **Public** → 5xx concealed behind a generic message + `Type = "InternalServerError"`.
+- **Private** → verbose error details are returned to aid debugging.
+
+---
+
+## Configuration Summary
+
+**Visibility**
 
 ```json
 {
@@ -92,164 +349,56 @@ Configure visibility in your `appsettings.json`:
 }
 ```
 
-Supported naming conventions:
+- Switch to `Private` for internal environments to expose verbose details (do not enable in production).
+
+**Naming Convention (optional)**
+
+- In `program.cs`, pass your preferred convention:
 
 ```csharp
-public enum NamingConvention
-{
-    Default = 0,
-    ToSnakeCase = 1,
-    ToPascalCase = 2,
-    ToCamelCase = 3,
-    ToKebabCase = 4,
-    ToTitleCase = 5,
-    ToHumanCase = 6,
-    ToUpperSnakeCase = 7
-}
+builder.AddResponseCrafter(NamingConvention.ToSnakeCase);
 ```
 
-### 2. Setup Exception Handling for SignalR:
+### Exception handler log suppression (optional)
 
-For SignalR support, register the exception filter for your hubs (or per hub) as follows:
+Enabled by default to avoid duplicate request-error logs from ASP.NET Core’s
+`ExceptionHandlerMiddleware`. This does not affect hosted service logs or other `Microsoft.*` categories.
 
 ```csharp
-builder.Services.AddSignalR(options => options.AddFilter<SignalRExceptionFilter>());
+// Keep the framework error log (opt out of suppression)
+builder.AddResponseCrafter(
+    namingConvention: NamingConvention.ToSnakeCase,
+    suppressExceptionHandlerMiddlewareLog: false);
+
 ```
 
-If you already have the existing configuration for REST APIs, like
-`builder.AddResponseCrafter(NamingConvention.ToSnakeCase);`, SignalR messages will automatically use the same error
-handling and response crafting.
+---
 
-### 3. Implement Hub Methods with Standard Arguments:
+## Frontend Integration Guidance
 
-To allow proper response handling, the hub methods should use the `HubArgument<T>` structure, which provides a unique
-invocation ID for tracing errors and crafting detailed responses.
+- Treat `Message` and `Errors` values as **localization keys**.
+- Use `StatusCode` for UX-level branching; avoid coupling to `Type` names.
+- Show `RequestId` / `TraceId` in error overlays to speed up support.
+- For SignalR, correlate using `InvocationId`.
 
-```csharp
-public async Task SendMessage(HubArgument<Message> hubArgument)
-{
-    throw new BadRequestException("This is a test exception");
-    await Clients.All.ReceiveMessage(hubArgument.Argument);
-}
-```
+---
 
-### 4. Define Custom Exceptions:
+## Versioning & Compatibility
 
-Create custom exception classes that inherit from `ApiException` or use the predefined ones. Use `ErrorDetails` records
-for
-specific error messages related to API requests.
+- **No breaking changes** to existing fields without a major version bump.
+- We may add **optional** fields in minor versions—clients should ignore unknown fields.
+- The SignalR error event name remains **`ReceiveError`**.
 
-### 5. Configure Middleware:
-
-* Implement the exception handling middleware in your application's pipeline.
-
-```csharp
-app.UseResponseCrafter();
-```
-
-## SignalR-Specific Error Handling and Structure
-
-When using the package with SignalR, the following structures are used for standardizing request and response handling:
-**HubErrorResponse**
-This class is used to format error responses sent back to the client:
-
-```csharp
-public class HubErrorResponse
-{
-   public required string InvocationId { get; set; }
-   public required string Instance { get; set; }
-   public int StatusCode { get; set; }
-   public string Message { get; set; } = string.Empty;
-   public Dictionary<string, string>? Errors { get; set; }
-}
-```
-
-**HubArgument<T>**
-This class wraps around the standard arguments passed to SignalR methods, adding an `InvocationId` to enable unique
-error tracing.
-
-```csharp
-public class HubArgument<T>
-{
-   public required string InvocationId { get; set; }
-   public required T Argument { get; set; }
-}
-```
-
-## Logging and Error Responses:
-
-The package automatically logs warnings or errors and provides crafted responses based on the exception type, whether
-for REST APIs or SignalR hubs.
-
-## Predefined HTTP Exceptions
-
-* `BadRequestException`
-* `UnauthorizedException`
-* `PaymentRequiredException`
-* `ForbiddenException`
-* `NotFoundException`
-* `ConflictException`
-* `TooManyRequestsException`
-* `InternalServerErrorException`
-* `ServiceUnavailableException`
-
-### Custom Exception Helper Methods
-
-Using exception helpers:
-
-```csharp
-decimal? price = -10.5m;
-//For 400 Bad Request
-BadRequestException.ThrowIfNullOrNegative(price, "Price is negative");
-//For 500 Internal Server Error
-InternalServerErrorException.ThrowIfNullOrNegative(price, "Price is negative");
-
-string? username = "   ";
-//For 400 Bad Request
-BadRequestException.ThrowIfNullOrWhiteSpace(username, "Please provide username");
-//For 404 Not Found
-NotFoundException.ThrowIfNullOrWhiteSpace(username);
-//For 500 Internal Server Error
-InternalServerErrorException.ThrowIfNullOrWhiteSpace(username, "Price is negative");
-
-List<int> tags = [];
-//For 400 Bad Request
-BadRequestException.ThrowIfNullOrEmpty(tags, "Please provide tags");
-//For 404 Not Found
-NotFoundException.ThrowIfNullOrEmpty(tags);
-//For 500 Internal Server Error
-InternalServerErrorException.ThrowIfNullOrEmpty(tags, "Please provide tags");
-
-object? user = null;
-//For 400 Bad Request
-BadRequestException.ThrowIfNull(user, "Please provide user");
-//For 404 Not Found
-NotFoundException.ThrowIfNull(user, "Please provide user");
-//For 500 Internal Server Error
-InternalServerErrorException.ThrowIfNull(user, "Please provide user");
-
-bool userUnauthorized = false;
-//For 401 Unauthorized
-UnauthorizedException.ThrowIf(userUnauthorized, "User is unauthorized");
-//For 500 Internal Server Error
-InternalServerErrorException.ThrowIf(userUnauthorized, "User is unauthorized");
-```
-
-These examples show how to use the `ThrowIfNullOrNegative`, `ThrowIfNullOrWhiteSpace`, `ThrowIfNullOrEmpty` and
-`ThrowIfNull` helper methods
-from `BadRequestException`, `InternalServerErrorException` and `NotFoundException`. Adjust the object names and values
-according to your specific
-application needs.
-
-## Recommendations
-
-* **Error Message Formatting:** It's recommended to use snake_case for error messages to aid frontend applications in
-  implementing localization.
+---
 
 ## Limitations
 
-* This package is specifically tailored for .NET 8 and above.
+- Designed for **.NET 8+**.
+
+---
 
 ## License
 
-Pandatech.ResponseCrafter is licensed under the MIT License.
+MIT
+
+---
