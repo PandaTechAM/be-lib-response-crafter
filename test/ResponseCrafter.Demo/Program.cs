@@ -1,4 +1,3 @@
-using Humanizer;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using ResponseCrafter.Demo.Hubs;
@@ -6,8 +5,11 @@ using ResponseCrafter.Enums;
 using ResponseCrafter.ExceptionHandlers.SignalR;
 using ResponseCrafter.Extensions;
 using ResponseCrafter.HttpExceptions;
+using SharedKernel.Logging;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.AddSerilog(LogBackend.ElasticSearch);
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -47,10 +49,10 @@ app.MapPost("/errors/bad-request",
          });
    });
 
-app.MapPost("/errors/dotnet",
+app.MapPost("/errors/internal-server-error",
    () =>
    {
-      throw new InvalidOperationException("simulated_invalid_operation");
+      throw new InternalServerErrorException("simulated_internal_server_error");
    });
 
 app.MapPost("/errors/500",

@@ -98,6 +98,15 @@ public class SignalRExceptionFilter : IHubFilter
       string invocationId)
    {
       var traceId = Activity.Current?.TraceId.ToString() ?? string.Empty;
+      var isServerError = ex.StatusCode >= 500;
+
+      var clientMessage = isServerError && _visibility != "Private"
+         ? ExceptionMessages.DefaultMessage.ConvertCase(_convention)
+         : ex.Message.ConvertCase(_convention);
+
+      var clientErrors = isServerError && _visibility != "Private"
+         ? null
+         : ex.Errors.ConvertCase(_convention);
 
       using (_logger.BeginScope(new Dictionary<string, object>
              {
@@ -117,19 +126,25 @@ public class SignalRExceptionFilter : IHubFilter
             InvocationId = invocationId,
             Instance = ctx.HubMethodName,
             StatusCode = ex.StatusCode,
-            Message = ex.Message.ConvertCase(_convention),
-            Errors = ex.Errors.ConvertCase(_convention)
+            Message = clientMessage,
+            Errors = clientErrors
          };
 
-         if (response.Errors is null || response.Errors.Count == 0)
+         if (isServerError)
          {
-            _logger.LogWarning("SignalR exception: {Message}", response.Message);
+            _logger.LogError(ex,
+               "SignalR ApiException {StatusCode}: {Message} {@Errors}",
+               ex.StatusCode,
+               ex.Message,
+               ex.Errors);
          }
          else
          {
-            _logger.LogWarning("SignalR exception: {Message} with errors: {@Errors}",
-               response.Message,
-               response.Errors);
+            _logger.LogWarning(ex,
+               "SignalR ApiException {StatusCode}: {Message} {@Errors}",
+               ex.StatusCode,
+               ex.Message,
+               ex.Errors);
          }
 
          await ctx.Hub.Clients.Caller.SendAsync("ReceiveError", response, ctx.Context.ConnectionAborted);

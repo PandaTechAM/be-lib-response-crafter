@@ -156,6 +156,15 @@ internal class ApiExceptionHandler : IExceptionHandler
    {
       var traceId = Activity.Current?.TraceId.ToString() ?? string.Empty;
       var instance = CreateRequestPath(httpContext);
+      var isServerError = exception.StatusCode >= 500;
+
+      var clientMessage = isServerError && _visibility != "Private"
+         ? ExceptionMessages.DefaultMessage.ConvertCase(_convention)
+         : exception.Message.ConvertCase(_convention);
+
+      var clientErrors = isServerError && _visibility != "Private"
+         ? null
+         : exception.Errors.ConvertCase(_convention);
 
       using (_logger.BeginScope(new Dictionary<string, object>
              {
@@ -173,24 +182,23 @@ internal class ApiExceptionHandler : IExceptionHandler
             TraceId = traceId,
             Instance = instance,
             StatusCode = exception.StatusCode,
-            Type = exception.GetType()
-                            .Name,
-            Errors = exception.Errors.ConvertCase(_convention),
-            Message = exception.Message.ConvertCase(_convention)
+            Type = isServerError ? "InternalServerError" : exception.GetType().Name,
+            Errors = clientErrors,
+            Message = clientMessage
          };
 
-         httpContext.Response.StatusCode = exception.StatusCode;
+         httpContext.Response.StatusCode = response.StatusCode;
          await httpContext.Response.WriteAsJsonAsync(response, ct);
 
-         if (response.Errors is null || response.Errors.Count == 0)
+         if (isServerError)
          {
-            _logger.LogWarning("ApiException encountered: {Message}", response.Message);
+            _logger.LogError(exception, "ApiException {StatusCode}: {Message} {@Errors}",
+               exception.StatusCode, exception.Message, exception.Errors);
          }
          else
          {
-            _logger.LogWarning("ApiException encountered: {Message} with errors: {@Errors}",
-               response.Message,
-               response.Errors);
+            _logger.LogWarning(exception, "ApiException {StatusCode}: {Message} {@Errors}",
+               exception.StatusCode, exception.Message, exception.Errors);
          }
       }
    }

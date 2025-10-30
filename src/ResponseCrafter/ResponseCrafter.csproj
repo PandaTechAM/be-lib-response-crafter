@@ -8,13 +8,13 @@
         <Copyright>MIT</Copyright>
         <PackageIcon>pandatech.png</PackageIcon>
         <PackageReadmeFile>Readme.md</PackageReadmeFile>
-        <Version>5.2.2</Version>
+        <Version>5.3.0</Version>
         <PackageId>Pandatech.ResponseCrafter</PackageId>
         <PackageTags>Pandatech, library, exception handler, exception, middleware, Api response</PackageTags>
         <Title>ResponseCrafter</Title>
         <Description>Handling exceptions, custom Dtos.</Description>
         <RepositoryUrl>https://github.com/PandaTechAM/be-lib-response-crafter</RepositoryUrl>
-        <PackageReleaseNotes>Nuget updates.</PackageReleaseNotes>
+        <PackageReleaseNotes>Fixed bug on internal server error exception.</PackageReleaseNotes>
     </PropertyGroup>
 
     <ItemGroup>
@@ -27,7 +27,7 @@
         <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.8"/>
         <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="9.0.8"/>
         <PackageReference Include="PandaTech.FluentImporter" Version="3.0.9" />
-        <PackageReference Include="Pandatech.GridifyExtensions" Version="2.0.14" />
+        <PackageReference Include="Pandatech.GridifyExtensions" Version="2.1.4" />
     </ItemGroup>
 
 </Project>
