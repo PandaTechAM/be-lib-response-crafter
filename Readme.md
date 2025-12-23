@@ -68,13 +68,6 @@ app.Run();
 - **Public:** 4xx → detailed as defined; 5xx → generic message (no sensitive details).
 - **Private:** 4xx/5xx → expands with verbose diagnostics (where available).
 
-> **Note:** By default, `ResponseCrafter` suppresses the duplicate framework error log from
-`Microsoft.AspNetCore.Diagnostics.ExceptionHandlerMiddleware`.
-> If you prefer to keep that log, opt out:
-> ```csharp
-> builder.AddResponseCrafter(> NamingConvention.ToSnakeCase,> suppressExceptionHandlerMiddlewareLog: false);
-> ```
-
 ```
 ---
 
