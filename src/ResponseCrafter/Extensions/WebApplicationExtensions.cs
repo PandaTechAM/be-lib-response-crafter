@@ -10,8 +10,7 @@ namespace ResponseCrafter.Extensions;
 public static class WebApplicationExtensions
 {
    public static WebApplicationBuilder AddResponseCrafter(this WebApplicationBuilder builder,
-      NamingConvention namingConvention = NamingConvention.Default,
-      bool suppressExceptionHandlerMiddlewareLog = true)
+      NamingConvention namingConvention = NamingConvention.Default)
    {
       builder.Services.AddSingleton(new NamingConventionOptions
       {
@@ -19,13 +18,6 @@ public static class WebApplicationExtensions
       });
       builder.Services.AddExceptionHandler<ApiExceptionHandler>();
 
-      if (!suppressExceptionHandlerMiddlewareLog)
-      {
-         return builder;
-      }
-
-      builder.Logging.AddFilter("Microsoft.AspNetCore.Diagnostics.ExceptionHandlerMiddleware", LogLevel.None);
-      
       return builder;
    }
 
