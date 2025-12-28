@@ -1,20 +1,29 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFramework>net9.0</TargetFramework>
+        <TargetFramework>net10.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <Authors>Pandatech</Authors>
         <Copyright>MIT</Copyright>
         <PackageIcon>pandatech.png</PackageIcon>
         <PackageReadmeFile>Readme.md</PackageReadmeFile>
-        <Version>5.3.1</Version>
+        <Version>6.0.0</Version>
         <PackageId>Pandatech.ResponseCrafter</PackageId>
         <PackageTags>Pandatech, library, exception handler, exception, middleware, Api response</PackageTags>
         <Title>ResponseCrafter</Title>
         <Description>Handling exceptions, custom Dtos.</Description>
         <RepositoryUrl>https://github.com/PandaTechAM/be-lib-response-crafter</RepositoryUrl>
-        <PackageReleaseNotes>Not supressing microsoft logs anymore</PackageReleaseNotes>
+        <PackageReleaseNotes>dotnet 10 upgrade</PackageReleaseNotes>
+
+        <!-- Never run analyzers as part of compilation (local, CI, dotnet build/test/publish) -->
+        <RunAnalyzersDuringBuild>false</RunAnalyzersDuringBuild>
+
+        <!-- Keep background/live analysis in the IDE -->
+        <RunAnalyzersDuringLiveAnalysis>true</RunAnalyzersDuringLiveAnalysis>
+
+        <!-- Optional: ensure code-style analyzers don't run during build either -->
+        <EnforceCodeStyleInBuild>false</EnforceCodeStyleInBuild>
     </PropertyGroup>
 
     <ItemGroup>
@@ -23,11 +32,16 @@
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="Humanizer" Version="2.14.1"/>
-        <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.8"/>
-        <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="9.0.8"/>
-        <PackageReference Include="PandaTech.FluentImporter" Version="3.0.9" />
-        <PackageReference Include="Pandatech.GridifyExtensions" Version="2.1.4" />
+        <PackageReference Include="Humanizer" Version="3.0.1" />
+        <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.1" />
+        <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="10.0.1" />
+        <PackageReference Include="PandaTech.FluentImporter" Version="4.0.0" />
+        <PackageReference Include="Pandatech.GridifyExtensions" Version="3.0.0" />
+        <PackageReference Include="Pandatech.Analyzers" Version="1.6.0" />
+        <PackageReference Include="SonarAnalyzer.CSharp" Version="10.17.0.131074">
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
     </ItemGroup>
 
 </Project>

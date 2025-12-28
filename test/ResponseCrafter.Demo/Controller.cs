@@ -14,7 +14,6 @@ public class Controller : ControllerBase
         
         NotFoundException.ThrowIfNull(vazgen);
 
-        string vazgen2 = vazgen;
         throw new BadRequestException("some_exception");
     }
 
