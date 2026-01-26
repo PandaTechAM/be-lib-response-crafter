@@ -2,13 +2,16 @@
 
 public static class HttpContextExtensions
 {
-    public static string GetToken(this HttpContext httpContext)
+    extension(HttpContext httpContext)
     {
-        return httpContext.Response.Headers.Authorization.ToString();
-    }
+       public string GetToken()
+       {
+          return httpContext.Response.Headers.Authorization.ToString();
+       }
 
-    public static void SetToken(this HttpContext httpContext, string token)
-    {
-        httpContext.Response.Headers.Authorization = token;
+       public void SetToken(string token)
+       {
+          httpContext.Response.Headers.Authorization = token;
+       }
     }
 }

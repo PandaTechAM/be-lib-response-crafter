@@ -6,58 +6,61 @@ namespace ResponseCrafter.Extensions;
 
 public static class MinimalApiExtensions
 {
-   public static RouteHandlerBuilder ProducesErrorResponse(this RouteHandlerBuilder builder, int statusCode)
+   extension(RouteHandlerBuilder builder)
    {
-      return builder.Produces<ErrorResponse>(statusCode);
-   }
-
-   public static RouteHandlerBuilder ProducesErrorResponse(this RouteHandlerBuilder builder, params int[] statusCodes)
-   {
-      foreach (var statusCode in statusCodes)
+      public RouteHandlerBuilder ProducesErrorResponse(int statusCode)
       {
-         builder.Produces<ErrorResponse>(statusCode);
+         return builder.Produces<ErrorResponse>(statusCode);
       }
 
-      return builder;
-   }
+      public RouteHandlerBuilder ProducesErrorResponse(params int[] statusCodes)
+      {
+         foreach (var statusCode in statusCodes)
+         {
+            builder.Produces<ErrorResponse>(statusCode);
+         }
 
-   public static RouteHandlerBuilder ProducesBadRequest(this RouteHandlerBuilder builder)
-   {
-      return builder.Produces<ErrorResponse>(StatusCodes.Status400BadRequest);
-   }
+         return builder;
+      }
 
-   public static RouteHandlerBuilder ProducesConflict(this RouteHandlerBuilder builder)
-   {
-      return builder.Produces<ErrorResponse>(StatusCodes.Status409Conflict);
-   }
+      public RouteHandlerBuilder ProducesBadRequest()
+      {
+         return builder.Produces<ErrorResponse>(StatusCodes.Status400BadRequest);
+      }
 
-   public static RouteHandlerBuilder ProducesForbidden(this RouteHandlerBuilder builder)
-   {
-      return builder.Produces<ErrorResponse>(StatusCodes.Status403Forbidden);
-   }
+      public RouteHandlerBuilder ProducesConflict()
+      {
+         return builder.Produces<ErrorResponse>(StatusCodes.Status409Conflict);
+      }
 
-   public static RouteHandlerBuilder ProducesNotFound(this RouteHandlerBuilder builder)
-   {
-      return builder.Produces<ErrorResponse>(StatusCodes.Status404NotFound);
-   }
+      public RouteHandlerBuilder ProducesForbidden()
+      {
+         return builder.Produces<ErrorResponse>(StatusCodes.Status403Forbidden);
+      }
 
-   public static RouteHandlerBuilder ProducesPaymentRequired(this RouteHandlerBuilder builder)
-   {
-      return builder.Produces<ErrorResponse>(StatusCodes.Status402PaymentRequired);
-   }
+      public RouteHandlerBuilder ProducesNotFound()
+      {
+         return builder.Produces<ErrorResponse>(StatusCodes.Status404NotFound);
+      }
 
-   public static RouteHandlerBuilder ProducesServiceUnavailable(this RouteHandlerBuilder builder)
-   {
-      return builder.Produces<ErrorResponse>(StatusCodes.Status503ServiceUnavailable);
-   }
+      public RouteHandlerBuilder ProducesPaymentRequired()
+      {
+         return builder.Produces<ErrorResponse>(StatusCodes.Status402PaymentRequired);
+      }
 
-   public static RouteHandlerBuilder ProducesTooManyRequests(this RouteHandlerBuilder builder)
-   {
-      return builder.Produces<ErrorResponse>(StatusCodes.Status429TooManyRequests);
-   }
+      public RouteHandlerBuilder ProducesServiceUnavailable()
+      {
+         return builder.Produces<ErrorResponse>(StatusCodes.Status503ServiceUnavailable);
+      }
 
-   public static RouteHandlerBuilder ProducesUnauthorized(this RouteHandlerBuilder builder)
-   {
-      return builder.Produces<ErrorResponse>(StatusCodes.Status401Unauthorized);
+      public RouteHandlerBuilder ProducesTooManyRequests()
+      {
+         return builder.Produces<ErrorResponse>(StatusCodes.Status429TooManyRequests);
+      }
+
+      public RouteHandlerBuilder ProducesUnauthorized()
+      {
+         return builder.Produces<ErrorResponse>(StatusCodes.Status401Unauthorized);
+      }
    }
 }
