@@ -8,13 +8,13 @@
         <Copyright>MIT</Copyright>
         <PackageIcon>pandatech.png</PackageIcon>
         <PackageReadmeFile>Readme.md</PackageReadmeFile>
-        <Version>6.0.1</Version>
+        <Version>6.0.2</Version>
         <PackageId>Pandatech.ResponseCrafter</PackageId>
         <PackageTags>Pandatech, library, exception handler, exception, middleware, Api response</PackageTags>
         <Title>ResponseCrafter</Title>
         <Description>Handling exceptions, custom Dtos.</Description>
         <RepositoryUrl>https://github.com/PandaTechAM/be-lib-response-crafter</RepositoryUrl>
-        <PackageReleaseNotes>nuget updates</PackageReleaseNotes>
+        <PackageReleaseNotes>Added GatewayTimeoutException</PackageReleaseNotes>
 
         <!-- Never run analyzers as part of compilation (local, CI, dotnet build/test/publish) -->
         <RunAnalyzersDuringBuild>false</RunAnalyzersDuringBuild>
