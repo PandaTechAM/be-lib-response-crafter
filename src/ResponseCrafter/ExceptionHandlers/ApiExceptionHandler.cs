@@ -17,9 +17,9 @@ using ResponseCrafter.Options;
 using static ResponseCrafter.Helpers.ExceptionMessageBuilder;
 using IExceptionHandler = Microsoft.AspNetCore.Diagnostics.IExceptionHandler;
 
-namespace ResponseCrafter.ExceptionHandlers.Http;
+namespace ResponseCrafter.ExceptionHandlers;
 
-internal class ApiExceptionHandler : IExceptionHandler
+internal partial class ApiExceptionHandler : IExceptionHandler
 {
    private readonly NamingConvention _convention;
    private readonly ILogger<ApiExceptionHandler> _logger;
@@ -55,7 +55,6 @@ internal class ApiExceptionHandler : IExceptionHandler
          case BadHttpRequestException badHttpRequestException:
             await HandleBadHttpRequestExceptionAsync(httpContext, badHttpRequestException, cancellationToken);
             break;
-
          case ApiException apiException:
             await HandleApiExceptionAsync(httpContext, apiException, cancellationToken);
             break;
@@ -67,14 +66,11 @@ internal class ApiExceptionHandler : IExceptionHandler
       return true;
    }
 
-
    private async Task HandleDbConcurrencyExceptionAsync(HttpContext httpContext, CancellationToken cancellationToken)
    {
-      var exception =
-         new ConflictException(ExceptionMessages.ConcurrencyMessage.ConvertCase(_convention));
+      var exception = new ConflictException(ExceptionMessages.ConcurrencyMessage.ConvertCase(_convention));
       await HandleApiExceptionAsync(httpContext, exception, cancellationToken);
    }
-
 
    private async Task HandleImportExceptionAsync(HttpContext httpContext,
       ImportException importException,
@@ -107,15 +103,13 @@ internal class ApiExceptionHandler : IExceptionHandler
             ["detail"] = "json_deserialization_failed".ConvertCase(_convention)
          };
 
-         var posObj = typeof(JsonException).GetProperty(nameof(JsonException.BytePositionInLine))
-                                           ?.GetValue(je);
+         var posObj = typeof(JsonException).GetProperty(nameof(JsonException.BytePositionInLine))?.GetValue(je);
          if (posObj is long pos and >= 0)
          {
             errors["byte_position"] = pos.ToString(CultureInfo.InvariantCulture);
          }
 
-         var lineObj = typeof(JsonException).GetProperty(nameof(JsonException.LineNumber))
-                                            ?.GetValue(je);
+         var lineObj = typeof(JsonException).GetProperty(nameof(JsonException.LineNumber))?.GetValue(je);
          if (lineObj is long line and >= 0)
          {
             errors["line_number"] = line.ToString(CultureInfo.InvariantCulture);
@@ -166,40 +160,41 @@ internal class ApiExceptionHandler : IExceptionHandler
          ? null
          : exception.Errors.ConvertCase(_convention);
 
-      using (_logger.BeginScope(new Dictionary<string, object>
-             {
-                ["trace_id"] = traceId,
-                ["request_id"] = httpContext.TraceIdentifier,
-                ["instance"] = instance,
-                ["http_method"] = httpContext.Request.Method,
-                ["path"] = httpContext.Request.Path.ToString(),
-                ["status_code"] = exception.StatusCode
-             }))
+      var response = new ErrorResponse
       {
-         var response = new ErrorResponse
-         {
-            RequestId = httpContext.TraceIdentifier,
-            TraceId = traceId,
-            Instance = instance,
-            StatusCode = exception.StatusCode,
-            Type = isServerError ? "InternalServerError" : exception.GetType().Name,
-            Errors = clientErrors,
-            Message = clientMessage
-         };
+         RequestId = httpContext.TraceIdentifier,
+         TraceId = traceId,
+         Instance = instance,
+         StatusCode = exception.StatusCode,
+         Type = isServerError ? "InternalServerError" : exception.GetType().Name,
+         Errors = clientErrors,
+         Message = clientMessage
+      };
 
-         httpContext.Response.StatusCode = response.StatusCode;
-         await httpContext.Response.WriteAsJsonAsync(response, ct);
+      httpContext.Response.StatusCode = response.StatusCode;
+      await httpContext.Response.WriteAsJsonAsync(response, ct);
 
-         if (isServerError)
-         {
-            _logger.LogError(exception, "ApiException {StatusCode}: {Message} {@Errors}",
-               exception.StatusCode, exception.Message, exception.Errors);
-         }
-         else
-         {
-            _logger.LogWarning(exception, "ApiException {StatusCode}: {Message} {@Errors}",
-               exception.StatusCode, exception.Message, exception.Errors);
-         }
+      if (isServerError)
+      {
+         LogServerError(_logger,
+            exception.GetType().Name,
+            exception.StatusCode,
+            exception.Message,
+            instance,
+            traceId,
+            httpContext.TraceIdentifier,
+            exception);
+      }
+      else
+      {
+         LogClientError(_logger,
+            exception.GetType().Name,
+            exception.StatusCode,
+            exception.Message,
+            instance,
+            traceId,
+            httpContext.TraceIdentifier,
+            exception);
       }
    }
 
@@ -223,25 +218,59 @@ internal class ApiExceptionHandler : IExceptionHandler
 
       if (_visibility == "Private")
       {
-         response.Type = exception.GetType()
-                                  .Name;
+         response.Type = exception.GetType().Name;
          response.Message = verboseMessage.ConvertCase(_convention);
       }
 
       httpContext.Response.StatusCode = response.StatusCode;
+      await httpContext.Response.WriteAsJsonAsync(response, cancellationToken);
 
-      using (_logger.BeginScope(new Dictionary<string, object> // <-- scope before write (optional)
-             {
-                ["trace_id"] = traceId,
-                ["request_id"] = httpContext.TraceIdentifier,
-                ["instance"] = instance,
-                ["http_method"] = httpContext.Request.Method,
-                ["path"] = httpContext.Request.Path.ToString(),
-                ["status_code"] = 500
-             }))
-      {
-         await httpContext.Response.WriteAsJsonAsync(response, cancellationToken);
-         _logger.LogError("Unhandled exception encountered: {Message}", verboseMessage);
-      }
+      LogUnhandledException(_logger,
+         exception.GetType().Name,
+         instance,
+         traceId,
+         httpContext.TraceIdentifier,
+         exception);
    }
+
+   // Source-generated logging methods
+   [LoggerMessage(
+      EventId = 1,
+      Level = LogLevel.Error,
+      Message = "Server error: {ExceptionType} [{StatusCode}] at {Instance} | TraceId: {TraceId}, RequestId: {RequestId}, Message: {Message}")]
+   private static partial void LogServerError(
+      ILogger logger,
+      string exceptionType,
+      int statusCode,
+      string message,
+      string instance,
+      string traceId,
+      string requestId,
+      Exception exception);
+
+   [LoggerMessage(
+      EventId = 2,
+      Level = LogLevel.Warning,
+      Message = "Client error: {ExceptionType} [{StatusCode}] at {Instance} | TraceId: {TraceId}, RequestId: {RequestId}, Message: {Message}")]
+   private static partial void LogClientError(
+      ILogger logger,
+      string exceptionType,
+      int statusCode,
+      string message,
+      string instance,
+      string traceId,
+      string requestId,
+      Exception exception);
+
+   [LoggerMessage(
+      EventId = 3,
+      Level = LogLevel.Error,
+      Message = "Unhandled exception: {ExceptionType} at {Instance} | TraceId: {TraceId}, RequestId: {RequestId}")]
+   private static partial void LogUnhandledException(
+      ILogger logger,
+      string exceptionType,
+      string instance,
+      string traceId,
+      string requestId,
+      Exception exception);
 }

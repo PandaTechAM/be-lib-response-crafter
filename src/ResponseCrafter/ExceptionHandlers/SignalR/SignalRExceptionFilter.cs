@@ -13,7 +13,10 @@ using ResponseCrafter.Options;
 
 namespace ResponseCrafter.ExceptionHandlers.SignalR;
 
-public class SignalRExceptionFilter : IHubFilter
+/// <summary>
+/// Hub filter for handling exceptions in SignalR hubs and broadcasting error responses to clients.
+/// </summary>
+public partial class SignalRExceptionFilter : IHubFilter
 {
    private readonly NamingConvention _convention;
    private readonly ILogger<SignalRExceptionFilter> _logger;
@@ -27,7 +30,6 @@ public class SignalRExceptionFilter : IHubFilter
       _convention = convention.NamingConvention;
       _visibility = configuration.GetResponseCrafterVisibility(_logger);
    }
-
 
    public async ValueTask<object?> InvokeMethodAsync(HubInvocationContext invocationContext,
       Func<HubInvocationContext, ValueTask<object?>> next)
@@ -79,7 +81,7 @@ public class SignalRExceptionFilter : IHubFilter
             return ha.InvocationId;
       }
 
-      // 3) Optional non-breaking fallback: header/query (safe to keep off if you don’t want it)
+      // 3) Optional non-breaking fallback: header/query (safe to keep off if you don't want it)
       var http = ctx.Context.GetHttpContext();
       var id = http?.Request
                    .Headers["x-invocation-id"]
@@ -108,47 +110,44 @@ public class SignalRExceptionFilter : IHubFilter
          ? null
          : ex.Errors.ConvertCase(_convention);
 
-      using (_logger.BeginScope(new Dictionary<string, object>
-             {
-                ["trace_id"] = traceId,
-                ["hub"] = ctx.Hub.GetType()
-                             .Name,
-                ["method"] = ctx.HubMethodName,
-                ["connection_id"] = ctx.Context.ConnectionId,
-                ["user_id"] = ctx.Context.UserIdentifier ?? "",
-                ["invocation_id"] = invocationId,
-                ["status_code"] = ex.StatusCode
-             }))
+      var response = new HubErrorResponse
       {
-         var response = new HubErrorResponse
-         {
-            TraceId = traceId,
-            InvocationId = invocationId,
-            Instance = ctx.HubMethodName,
-            StatusCode = ex.StatusCode,
-            Message = clientMessage,
-            Errors = clientErrors
-         };
+         TraceId = traceId,
+         InvocationId = invocationId,
+         Instance = ctx.HubMethodName,
+         StatusCode = ex.StatusCode,
+         Message = clientMessage,
+         Errors = clientErrors
+      };
 
-         if (isServerError)
-         {
-            _logger.LogError(ex,
-               "SignalR ApiException {StatusCode}: {Message} {@Errors}",
-               ex.StatusCode,
-               ex.Message,
-               ex.Errors);
-         }
-         else
-         {
-            _logger.LogWarning(ex,
-               "SignalR ApiException {StatusCode}: {Message} {@Errors}",
-               ex.StatusCode,
-               ex.Message,
-               ex.Errors);
-         }
-
-         await ctx.Hub.Clients.Caller.SendAsync("ReceiveError", response, ctx.Context.ConnectionAborted);
+      if (isServerError)
+      {
+         LogServerError(_logger,
+            ex.GetType()
+              .Name,
+            ex.StatusCode,
+            ctx.HubMethodName,
+            ctx.Hub.GetType()
+               .Name,
+            invocationId,
+            traceId,
+            ex);
       }
+      else
+      {
+         LogClientError(_logger,
+            ex.GetType()
+              .Name,
+            ex.StatusCode,
+            ctx.HubMethodName,
+            ctx.Hub.GetType()
+               .Name,
+            invocationId,
+            traceId,
+            ex);
+      }
+
+      await ctx.Hub.Clients.Caller.SendAsync("ReceiveError", response, ctx.Context.ConnectionAborted);
    }
 
    private async Task HandleGeneralExceptionAsync(HubInvocationContext ctx,
@@ -158,33 +157,28 @@ public class SignalRExceptionFilter : IHubFilter
       var traceId = Activity.Current?.TraceId.ToString() ?? string.Empty;
       var verbose = ex.CreateVerboseExceptionMessage();
 
-      using (_logger.BeginScope(new Dictionary<string, object>
-             {
-                ["trace_id"] = traceId,
-                ["hub"] = ctx.Hub.GetType()
-                             .Name,
-                ["method"] = ctx.HubMethodName,
-                ["connection_id"] = ctx.Context.ConnectionId,
-                ["user_id"] = ctx.Context.UserIdentifier ?? "",
-                ["invocation_id"] = invocationId,
-                ["status_code"] = 500
-             }))
+      var response = new HubErrorResponse
       {
-         var response = new HubErrorResponse
-         {
-            TraceId = traceId,
-            InvocationId = invocationId,
-            Instance = ctx.HubMethodName,
-            StatusCode = 500,
-            Message = _visibility == "Private"
-               ? verbose.ConvertCase(_convention)
-               : ExceptionMessages.DefaultMessage.ConvertCase(_convention)
-         };
+         TraceId = traceId,
+         InvocationId = invocationId,
+         Instance = ctx.HubMethodName,
+         StatusCode = 500,
+         Message = _visibility == "Private"
+            ? verbose.ConvertCase(_convention)
+            : ExceptionMessages.DefaultMessage.ConvertCase(_convention)
+      };
 
-         _logger.LogError("Unhandled SignalR exception: {Message}", verbose);
+      LogUnhandledException(_logger,
+         ex.GetType()
+           .Name,
+         ctx.HubMethodName,
+         ctx.Hub.GetType()
+            .Name,
+         invocationId,
+         traceId,
+         ex);
 
-         await ctx.Hub.Clients.Caller.SendAsync("ReceiveError", response, ctx.Context.ConnectionAborted);
-      }
+      await ctx.Hub.Clients.Caller.SendAsync("ReceiveError", response, ctx.Context.ConnectionAborted);
    }
 
    private static object? NullResultFor(HubInvocationContext _)
@@ -193,4 +187,46 @@ public class SignalRExceptionFilter : IHubFilter
       // For Task<T>/T: caller receives null once (plus ReceiveError event).
       return null;
    }
+
+   // Source-generated logging methods
+   [LoggerMessage(
+      EventId = 10,
+      Level = LogLevel.Error,
+      Message =
+         "SignalR server error: {ExceptionType} [{StatusCode}] in {HubName}.{MethodName} | InvocationId: {InvocationId}, TraceId: {TraceId}")]
+   private static partial void LogServerError(ILogger logger,
+      string exceptionType,
+      int statusCode,
+      string methodName,
+      string hubName,
+      string invocationId,
+      string traceId,
+      Exception exception);
+
+   [LoggerMessage(
+      EventId = 11,
+      Level = LogLevel.Warning,
+      Message =
+         "SignalR client error: {ExceptionType} [{StatusCode}] in {HubName}.{MethodName} | InvocationId: {InvocationId}, TraceId: {TraceId}")]
+   private static partial void LogClientError(ILogger logger,
+      string exceptionType,
+      int statusCode,
+      string methodName,
+      string hubName,
+      string invocationId,
+      string traceId,
+      Exception exception);
+
+   [LoggerMessage(
+      EventId = 12,
+      Level = LogLevel.Error,
+      Message =
+         "SignalR unhandled exception: {ExceptionType} in {HubName}.{MethodName} | InvocationId: {InvocationId}, TraceId: {TraceId}")]
+   private static partial void LogUnhandledException(ILogger logger,
+      string exceptionType,
+      string methodName,
+      string hubName,
+      string invocationId,
+      string traceId,
+      Exception exception);
 }
