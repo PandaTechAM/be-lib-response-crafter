@@ -3,8 +3,14 @@ using Microsoft.AspNetCore.Http;
 
 namespace ResponseCrafter.Helpers;
 
-public static class ExceptionMessageBuilder
+/// <summary>
+/// Helper methods for building exception messages and extracting request information.
+/// </summary>
+internal static class ExceptionMessageBuilder
 {
+   /// <summary>
+   /// Creates a verbose exception message including all inner exceptions.
+   /// </summary>
    public static string CreateVerboseExceptionMessage(this Exception exception)
    {
       var stringBuilder = new StringBuilder();
@@ -20,11 +26,9 @@ public static class ExceptionMessageBuilder
       {
          stringBuilder.AppendLine("Inner Exception:");
          stringBuilder.AppendLine(innerException.Message);
-         
 
          stringBuilder.AppendLine("Inner Exception Stack Trace:");
          stringBuilder.AppendLine(innerException.StackTrace);
-         
 
          innerException = innerException.InnerException;
       }
@@ -32,8 +36,11 @@ public static class ExceptionMessageBuilder
       return stringBuilder.ToString();
    }
 
-   public static string CreateRequestPath(HttpContext context)
+   /// <summary>
+   /// Creates a request path string in the format "METHOD /path".
+   /// </summary>
+   internal static string CreateRequestPath(HttpContext context)
    {
-      return $"{context.Request.Method} - {context.Request.Host}{context.Request.Path}{context.Request.QueryString}";
+      return $"{context.Request.Method} {context.Request.Path}{context.Request.QueryString}";
    }
 }

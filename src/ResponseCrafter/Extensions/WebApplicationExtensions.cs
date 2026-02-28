@@ -1,8 +1,8 @@
 ﻿using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 using ResponseCrafter.Enums;
-using ResponseCrafter.ExceptionHandlers.Http;
 using ResponseCrafter.Options;
+using ApiExceptionHandler = ResponseCrafter.ExceptionHandlers.ApiExceptionHandler;
 
 namespace ResponseCrafter.Extensions;
 
