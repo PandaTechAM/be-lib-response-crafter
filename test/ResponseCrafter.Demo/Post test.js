@@ -1,5 +1,5 @@
 import http from 'k6/http';
-import { check, sleep } from 'k6';
+import {sleep} from 'k6';
 
 const Api1 = "http://localhost:5074/load-controller";
 const Api2 = "http://localhost:5074/load-minimal";
