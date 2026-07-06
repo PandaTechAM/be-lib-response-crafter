@@ -1,63 +1,63 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-    <PropertyGroup>
-        <TargetFrameworks>net8.0;net9.0;net10.0</TargetFrameworks>
-        <Nullable>enable</Nullable>
-        <ImplicitUsings>enable</ImplicitUsings>
+  <PropertyGroup>
+    <TargetFrameworks>net8.0;net9.0;net10.0</TargetFrameworks>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
 
-        <IsPackable>true</IsPackable>
+    <IsPackable>true</IsPackable>
 
-        <PackageId>Pandatech.ResponseCrafter</PackageId>
-        <Authors>Pandatech</Authors>
-        <Description>Exception-based error handling for ASP.NET Core 8+ with RFC 9457 ProblemDetails, structured logging, typed exceptions, automatic EF Core/Gridify/FluentImporter exception mapping, SignalR support, and flexible naming conventions. Alternative to Result pattern libraries.</Description>
-        <PackageTags>exception-handling;error-handling;problemdetails;rfc9457;aspnetcore;minimal-api;signalr;logging;exceptions;middleware;api-response;validation;ef-core</PackageTags>
+    <PackageId>Pandatech.ResponseCrafter</PackageId>
+    <Authors>Pandatech</Authors>
+    <Description>Exception-based error handling for ASP.NET Core 8+ with RFC 9457 ProblemDetails, structured logging, typed exceptions, automatic EF Core/Gridify/FluentImporter exception mapping, SignalR support, and flexible naming conventions. Alternative to Result pattern libraries.</Description>
+    <PackageTags>exception-handling;error-handling;problemdetails;rfc9457;aspnetcore;minimal-api;signalr;logging;exceptions;middleware;api-response;validation;ef-core</PackageTags>
 
-        <PackageLicenseExpression>MIT</PackageLicenseExpression>
-        <RepositoryType>git</RepositoryType>
-        <RepositoryUrl>https://github.com/PandaTechAM/be-lib-response-crafter</RepositoryUrl>
-        <PackageProjectUrl>https://github.com/PandaTechAM/be-lib-response-crafter</PackageProjectUrl>
-        <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <RepositoryType>git</RepositoryType>
+    <RepositoryUrl>https://github.com/PandaTechAM/be-lib-response-crafter</RepositoryUrl>
+    <PackageProjectUrl>https://github.com/PandaTechAM/be-lib-response-crafter</PackageProjectUrl>
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
 
-        <PackageIcon>pandatech.png</PackageIcon>
-        <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageIcon>pandatech.png</PackageIcon>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
 
-        <Version>7.0.0</Version>
-        <PackageReleaseNotes>Multi-target net8.0/9.0/10.0, source-generated logging, path-only instance URIs, updated dependencies, fixed extension method syntax</PackageReleaseNotes>
+    <Version>7.0.1</Version>
+    <PackageReleaseNotes>Tooling modernization: dependency updates, standardized editorconfig/gitignore/global.json; fixed InternalServerErrorException.ThrowIfNullOrNegative throwing the wrong exception type.</PackageReleaseNotes>
 
-        <!-- Build quality -->
-        <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
-        <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <!-- Build quality -->
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
 
-        <!-- Source/symbols -->
-        <IncludeSymbols>true</IncludeSymbols>
-        <SymbolPackageFormat>snupkg</SymbolPackageFormat>
-        <ContinuousIntegrationBuild Condition="'$(CI)' == 'true'">true</ContinuousIntegrationBuild>
+    <!-- Source/symbols -->
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    <ContinuousIntegrationBuild Condition="'$(CI)' == 'true'">true</ContinuousIntegrationBuild>
 
-        <!-- Analyzer behavior -->
-        <RunAnalyzersDuringBuild>false</RunAnalyzersDuringBuild>
-        <RunAnalyzersDuringLiveAnalysis>true</RunAnalyzersDuringLiveAnalysis>
-        <EnforceCodeStyleInBuild>false</EnforceCodeStyleInBuild>
-    </PropertyGroup>
+    <!-- Analyzer behavior -->
+    <RunAnalyzersDuringBuild>false</RunAnalyzersDuringBuild>
+    <RunAnalyzersDuringLiveAnalysis>true</RunAnalyzersDuringLiveAnalysis>
+    <EnforceCodeStyleInBuild>false</EnforceCodeStyleInBuild>
+  </PropertyGroup>
 
-    <ItemGroup>
-        <None Include="..\..\pandatech.png" Pack="true" PackagePath="\"/>
-        <None Include="..\..\README.md" Pack="true" PackagePath="\"/>
-    </ItemGroup>
+  <ItemGroup>
+    <None Include="..\..\pandatech.png" Pack="true" PackagePath="\"/>
+    <None Include="..\..\README.md" Pack="true" PackagePath="\"/>
+  </ItemGroup>
 
-    <!-- ASP.NET Core for all features (IExceptionHandler, SignalR, etc.) -->
-    <ItemGroup>
-        <FrameworkReference Include="Microsoft.AspNetCore.App"/>
-    </ItemGroup>
+  <!-- ASP.NET Core for all features (IExceptionHandler, SignalR, etc.) -->
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App"/>
+  </ItemGroup>
 
-    <ItemGroup>
-        <PackageReference Include="Humanizer" Version="3.0.1"/>
-        <PackageReference Include="PandaTech.FluentImporter" Version="5.0.0"/>
-        <PackageReference Include="Pandatech.GridifyExtensions" Version="4.0.0"/>
-        <PackageReference Include="Pandatech.Analyzers" Version="[2.1.0]" PrivateAssets="all"/>
-        <PackageReference Include="SonarAnalyzer.CSharp" Version="[10.19.0.132793]">
-            <PrivateAssets>all</PrivateAssets>
-            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-        </PackageReference>
-    </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Humanizer" Version="3.0.10"/>
+    <PackageReference Include="PandaTech.FluentImporter" Version="5.0.1"/>
+    <PackageReference Include="Pandatech.GridifyExtensions" Version="4.1.3"/>
+    <PackageReference Include="Pandatech.Analyzers" Version="[2.1.0]" PrivateAssets="all"/>
+    <PackageReference Include="SonarAnalyzer.CSharp" Version="[10.28.0.143324]">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
 
 </Project>

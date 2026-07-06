@@ -20,11 +20,11 @@ builder.Services.AddSignalR(o => o.AddFilter<SignalRExceptionFilter>());
 
 // HTTP client for demo failures
 builder.Services.AddHttpClient("demo-http",
-   c =>
-   {
-      c.BaseAddress = new Uri("http://localhost:65535"); // guaranteed to refuse
-      c.Timeout = TimeSpan.FromSeconds(2);
-   });
+    c =>
+    {
+        c.BaseAddress = new Uri("http://localhost:65535"); // guaranteed to refuse
+        c.Timeout = TimeSpan.FromSeconds(2);
+    });
 
 
 builder.Services.AddControllers();
@@ -39,39 +39,33 @@ app.UseResponseCrafter();
 
 
 app.MapPost("/errors/bad-request",
-   () =>
-   {
-      throw new BadRequestException("invalid_payload",
-         new Dictionary<string, string>
-         {
-            ["email"] = "email_address_is_not_in_a_valid_format",
-            ["password"] = "password_must_be_at_least_8_characters_long"
-         });
-   });
+    () =>
+    {
+        throw new BadRequestException("invalid_payload",
+            new Dictionary<string, string>
+            {
+                ["email"] = "email_address_is_not_in_a_valid_format",
+                ["password"] = "password_must_be_at_least_8_characters_long"
+            });
+    });
 
 app.MapPost("/errors/internal-server-error",
-   () =>
-   {
-      throw new InternalServerErrorException("simulated_internal_server_error");
-   });
+    () => { throw new InternalServerErrorException("simulated_internal_server_error"); });
 
 app.MapPost("/errors/500",
-   () =>
-   {
-      throw new Exception("simulated_unhandled_exception");
-   });
+    () => { throw new Exception("simulated_unhandled_exception"); });
 
 app.MapGet("/errors/httpclient",
-   async ([FromServices] IHttpClientFactory factory) =>
-   {
-      throw new BadRequestException("something wrong");
-      var http = factory.CreateClient("demo-http");
-      // Will throw HttpRequestException (connection refused) or TaskCanceledException on timeout
-      _ = await http.GetStringAsync("/");
-      return Results.Ok("should_not_reach_here");
-   });
+    async ([FromServices] IHttpClientFactory factory) =>
+    {
+        throw new BadRequestException("something wrong");
+        var http = factory.CreateClient("demo-http");
+        // Will throw HttpRequestException (connection refused) or TaskCanceledException on timeout
+        _ = await http.GetStringAsync("/");
+        return Results.Ok("should_not_reach_here");
+    });
 
 
 app.MapControllers();
 
-app.Run();
+await app.RunAsync();

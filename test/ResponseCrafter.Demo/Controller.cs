@@ -11,7 +11,7 @@ public class Controller : ControllerBase
     public IActionResult ErrorByException()
     {
         string? vazgen = null;
-        
+
         NotFoundException.ThrowIfNull(vazgen);
 
         throw new BadRequestException("some_exception");
