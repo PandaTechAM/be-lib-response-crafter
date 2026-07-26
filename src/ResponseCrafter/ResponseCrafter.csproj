@@ -21,8 +21,8 @@
     <PackageIcon>pandatech.png</PackageIcon>
     <PackageReadmeFile>README.md</PackageReadmeFile>
 
-    <Version>7.0.1</Version>
-    <PackageReleaseNotes>Tooling modernization: dependency updates, standardized editorconfig/gitignore/global.json; fixed InternalServerErrorException.ThrowIfNullOrNegative throwing the wrong exception type.</PackageReleaseNotes>
+    <Version>7.1.0</Version>
+    <PackageReleaseNotes>FluentImporter mapping is now driven off the ImportException base type, so MissingColumnsException, DuplicateColumnException and SheetNotFoundException (added in FluentImporter 6.0.0) return 400 instead of falling through to 500. MessageDetails is no longer dropped, and MissingColumnsException/InvalidCellValueException now populate the errors dictionary. Behaviour change: InvalidPropertyNameException is now a 500 — it means a rule names a property the model does not have, which is a developer error rather than bad input. FluentImporter dependency bumped to 6.0.0.</PackageReleaseNotes>
 
     <!-- Build quality -->
     <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
@@ -51,7 +51,7 @@
 
   <ItemGroup>
     <PackageReference Include="Humanizer" Version="3.0.10"/>
-    <PackageReference Include="PandaTech.FluentImporter" Version="5.0.1"/>
+    <PackageReference Include="PandaTech.FluentImporter" Version="6.0.0"/>
     <PackageReference Include="Pandatech.GridifyExtensions" Version="4.1.3"/>
     <PackageReference Include="Pandatech.Analyzers" Version="[2.1.0]" PrivateAssets="all"/>
     <PackageReference Include="SonarAnalyzer.CSharp" Version="[10.28.0.143324]">
