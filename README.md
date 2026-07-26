@@ -179,7 +179,11 @@ public class Message : IHubArgument
 ResponseCrafter automatically handles:
 
 - **DbUpdateConcurrencyException** → 409 Conflict
-- **FluentImporter exceptions** → 400 Bad Request
+- **FluentImporter exceptions** → 400 Bad Request (every `ImportException`, including subclasses added by future
+  importer releases; `MessageDetails` is appended to the message, and `MissingColumnsException` /
+  `InvalidCellValueException` also populate `errors`). The one exception is **InvalidPropertyNameException** → 500,
+  because it means an import rule references a property the model does not have, which is a bug in your rule and not
+  something the caller's file can cause.
 - **Gridify exceptions** → 400 Bad Request
 - **BadHttpRequestException** (malformed JSON) → 400 with parse details
 - **Unhandled exceptions** → 500 Internal Server Error

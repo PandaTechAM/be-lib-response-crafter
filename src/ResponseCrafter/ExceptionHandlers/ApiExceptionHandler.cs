@@ -43,8 +43,8 @@ internal partial class ApiExceptionHandler : IExceptionHandler
             case DbUpdateConcurrencyException:
                 await HandleDbConcurrencyExceptionAsync(httpContext, cancellationToken);
                 break;
-            case ImportException targetInvocationException:
-                await HandleImportExceptionAsync(httpContext, targetInvocationException, cancellationToken);
+            case ImportException importException:
+                await HandleImportExceptionAsync(httpContext, importException, cancellationToken);
                 break;
             case GridifyException gridifyException:
                 await HandleGridifyExceptionAsync(httpContext, gridifyException, cancellationToken);
@@ -76,18 +76,57 @@ internal partial class ApiExceptionHandler : IExceptionHandler
         ImportException importException,
         CancellationToken cancellationToken)
     {
+        // A rule referencing a property the model does not have is a developer error: it fails on every
+        // request regardless of the uploaded file, so 500 is the honest answer rather than blaming the caller.
+        if (importException is InvalidPropertyNameException)
+        {
+            await HandleGeneralExceptionAsync(httpContext, importException, cancellationToken);
+            return;
+        }
+
+        // Every other import failure is the caller's file. Mapped off the shared base type so importer releases
+        // that add subclasses stay a 400 instead of silently regressing to a 500.
+        var message = string.IsNullOrWhiteSpace(importException.MessageDetails)
+            ? importException.Message
+            : $"{importException.Message} {importException.MessageDetails}";
+
+        var mappedException = new BadRequestException(message, BuildImportErrors(importException));
+
+        await HandleApiExceptionAsync(httpContext, mappedException, cancellationToken);
+    }
+
+    /// <summary>
+    ///     Surfaces the structured detail the importer carries so a client can point at the offending cell.
+    ///     Only identifiers belong here: <see cref="HandleApiExceptionAsync" /> case-converts error values as well
+    ///     as keys, so raw cell text would come back mangled. It stays in the message instead.
+    /// </summary>
+    private static Dictionary<string, string>? BuildImportErrors(ImportException importException)
+    {
         switch (importException)
         {
-            case InvalidColumnValueException _:
-            case InvalidCellValueException _:
-            case InvalidPropertyNameException _:
-            case EmptyFileImportException _:
-                var mappedException = new BadRequestException(importException.Message.ConvertCase(_convention));
-                await HandleApiExceptionAsync(httpContext, mappedException, cancellationToken);
-                break;
+            case MissingColumnsException { MissingColumns.Count: > 0 } missingColumnsException:
+                return new Dictionary<string, string>
+                {
+                    ["missing_columns"] = string.Join(", ", missingColumnsException.MissingColumns)
+                };
+
+            case InvalidCellValueException { Error: not null } invalidCellValueException:
+                var error = invalidCellValueException.Error;
+                var errors = new Dictionary<string, string>
+                {
+                    ["column_name"] = error.ColumnName,
+                    ["property_name"] = error.PropertyName
+                };
+
+                if (error.RowNumber is { } rowNumber)
+                {
+                    errors["row_number"] = rowNumber.ToString(CultureInfo.InvariantCulture);
+                }
+
+                return errors;
+
             default:
-                await HandleGeneralExceptionAsync(httpContext, importException, cancellationToken);
-                break;
+                return null;
         }
     }
 
